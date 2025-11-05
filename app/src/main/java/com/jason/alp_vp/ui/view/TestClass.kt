@@ -7,7 +7,6 @@ import androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun TestView(){
     Text("Hello World")
-    Text("branch ayman")
 }
 
 @Composable
