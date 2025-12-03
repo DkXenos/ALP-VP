@@ -6,7 +6,7 @@ import com.jason.alp_vp.repository.MockRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class ProfileViewModel(private val repository: MockRepository = MockRepository()) : ViewModel() {
+class ProfileViewModel : ViewModel() {
 
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user
@@ -20,12 +20,12 @@ class ProfileViewModel(private val repository: MockRepository = MockRepository()
     }
 
     private fun loadUserData() {
-        // In a real app, this would get the current user from repository
-        _user.value = repository.currentUser.value
+        // Use singleton MockRepository instance
+        _user.value = MockRepository.currentUser.value
     }
 
     private fun loadPortfolio() {
-        _portfolioItems.value = repository.getPortfolioItems()
+        _portfolioItems.value = MockRepository.getPortfolioItems()
     }
 }
 

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class BountyViewModel(private val repository: MockRepository = MockRepository()) : ViewModel() {
+class BountyViewModel : ViewModel() {
 
     private val _bounties = MutableStateFlow<List<Bounty>>(emptyList())
     val bounties: StateFlow<List<Bounty>> = _bounties
@@ -28,7 +28,7 @@ class BountyViewModel(private val repository: MockRepository = MockRepository())
 
     private fun loadBounties() {
         viewModelScope.launch {
-            repository.bounties.collect { bountyList ->
+            MockRepository.bounties.collect { bountyList ->
                 _bounties.value = bountyList
             }
         }
@@ -39,17 +39,17 @@ class BountyViewModel(private val repository: MockRepository = MockRepository())
         if (query.isEmpty()) {
             applyFilter(_selectedFilter.value)
         } else {
-            _bounties.value = repository.searchBounties(query)
+            _bounties.value = MockRepository.searchBounties(query)
         }
     }
 
     fun applyFilter(category: String) {
         _selectedFilter.value = category
-        _bounties.value = repository.filterBounties(category)
+        _bounties.value = MockRepository.filterBounties(category)
     }
 
     fun selectBounty(bountyId: String) {
-        _selectedBounty.value = repository.getBountyById(bountyId)
+        _selectedBounty.value = MockRepository.getBountyById(bountyId)
     }
 
     fun clearSelection() {

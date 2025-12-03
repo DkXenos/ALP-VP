@@ -1,6 +1,5 @@
 package com.jason.alp_vp.ui.screens
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -15,19 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jason.alp_vp.repository.MockRepository
 import com.jason.alp_vp.viewmodel.ProfileViewModel
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.PI
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,19 +27,13 @@ fun ProfileDashboardScreen(
     onNavigateBack: () -> Unit,
     viewModel: ProfileViewModel = viewModel()
 ) {
-    val repository = remember { MockRepository() }
-    val currentUser by repository.currentUser.collectAsState()
+    val currentUser by MockRepository.currentUser.collectAsState()
     val portfolioItems by viewModel.portfolioItems.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Profile") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
@@ -164,7 +150,7 @@ fun ProfileDashboardScreen(
                 }
 
                 item {
-                    // Stats Card
+                    // Stats Card - Using Progress Bars instead of Radar Chart
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -178,7 +164,7 @@ fun ProfileDashboardScreen(
                                 .padding(20.dp)
                         ) {
                             Text(
-                                text = "Skills Radar",
+                                text = "Skills Overview",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -186,16 +172,20 @@ fun ProfileDashboardScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Radar Chart
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(300.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                RadarChart(
-                                    skills = user.skills,
-                                    modifier = Modifier.fillMaxSize()
+                            // Skills Progress Bars
+                            if (user.skills.isNotEmpty()) {
+                                user.skills.forEach { (skillName, skillValue) ->
+                                    SkillProgressBar(
+                                        skillName = skillName,
+                                        skillValue = skillValue
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
+                            } else {
+                                Text(
+                                    text = "No skills data available",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
                         }
@@ -290,89 +280,41 @@ fun ProfileDashboardScreen(
 }
 
 @Composable
-fun RadarChart(
-    skills: Map<String, Int>,
-    modifier: Modifier = Modifier
+fun SkillProgressBar(
+    skillName: String,
+    skillValue: Int
 ) {
-    val skillsList = skills.toList()
-    val numberOfSkills = skillsList.size
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val secondaryColor = MaterialTheme.colorScheme.secondary
-    val surfaceColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-
-    Canvas(modifier = modifier.padding(32.dp)) {
-        val centerX = size.width / 2
-        val centerY = size.height / 2
-        val radius = minOf(centerX, centerY) * 0.8f
-        val angleStep = (2 * PI / numberOfSkills).toFloat()
-
-        // Draw background grid circles
-        for (i in 1..5) {
-            val gridRadius = radius * (i / 5f)
-            drawCircle(
-                color = surfaceColor,
-                radius = gridRadius,
-                center = Offset(centerX, centerY),
-                style = Stroke(width = 1.dp.toPx())
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = skillName,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "$skillValue / 100",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary
             )
         }
 
-        // Draw axes
-        skillsList.forEachIndexed { index, (skillName, _) ->
-            val angle = angleStep * index - (PI / 2).toFloat()
-            val endX = centerX + radius * cos(angle)
-            val endY = centerY + radius * sin(angle)
+        Spacer(modifier = Modifier.height(6.dp))
 
-            drawLine(
-                color = surfaceColor,
-                start = Offset(centerX, centerY),
-                end = Offset(endX, endY),
-                strokeWidth = 1.dp.toPx()
-            )
-        }
-
-        // Draw skill polygon
-        val path = Path()
-        skillsList.forEachIndexed { index, (_, value) ->
-            val angle = angleStep * index - (PI / 2).toFloat()
-            val skillRadius = radius * (value / 100f)
-            val x = centerX + skillRadius * cos(angle)
-            val y = centerY + skillRadius * sin(angle)
-
-            if (index == 0) {
-                path.moveTo(x, y)
-            } else {
-                path.lineTo(x, y)
-            }
-        }
-        path.close()
-
-        // Fill polygon
-        drawPath(
-            path = path,
-            color = secondaryColor.copy(alpha = 0.3f)
+        LinearProgressIndicator(
+            progress = (skillValue / 100f).coerceIn(0f, 1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = MaterialTheme.colorScheme.secondary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
-
-        // Draw polygon border
-        drawPath(
-            path = path,
-            color = secondaryColor,
-            style = Stroke(width = 2.dp.toPx())
-        )
-
-        // Draw points
-        skillsList.forEachIndexed { index, (_, value) ->
-            val angle = angleStep * index - (PI / 2).toFloat()
-            val skillRadius = radius * (value / 100f)
-            val x = centerX + skillRadius * cos(angle)
-            val y = centerY + skillRadius * sin(angle)
-
-            drawCircle(
-                color = primaryColor,
-                radius = 4.dp.toPx(),
-                center = Offset(x, y)
-            )
-        }
     }
 }
 

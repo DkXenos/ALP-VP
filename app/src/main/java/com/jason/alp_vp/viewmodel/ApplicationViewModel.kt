@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ApplicationViewModel(private val repository: MockRepository = MockRepository()) : ViewModel() {
+class ApplicationViewModel : ViewModel() {
 
     private val _applicationState = MutableStateFlow<ApplicationState>(ApplicationState.Idle)
     val applicationState: StateFlow<ApplicationState> = _applicationState
@@ -20,7 +20,7 @@ class ApplicationViewModel(private val repository: MockRepository = MockReposito
     fun submitApplication(bountyId: String, coverLetter: String) {
         viewModelScope.launch {
             _applicationState.value = ApplicationState.Loading
-            val result = repository.submitApplication(bountyId, coverLetter)
+            val result = MockRepository.submitApplication(bountyId, coverLetter)
             _applicationState.value = if (result.isSuccess) {
                 ApplicationState.Success
             } else {
@@ -31,13 +31,13 @@ class ApplicationViewModel(private val repository: MockRepository = MockReposito
 
     fun loadApplicationsForBounty(bountyId: String) {
         viewModelScope.launch {
-            _applications.value = repository.getApplicationsForBounty(bountyId)
+            _applications.value = MockRepository.getApplicationsForBounty(bountyId)
         }
     }
 
     fun updateApplicationStatus(applicationId: String, status: ApplicationStatus) {
         viewModelScope.launch {
-            repository.updateApplicationStatus(applicationId, status)
+            MockRepository.updateApplicationStatus(applicationId, status)
             // Refresh the list
             val currentList = _applications.value
             _applications.value = currentList.map {

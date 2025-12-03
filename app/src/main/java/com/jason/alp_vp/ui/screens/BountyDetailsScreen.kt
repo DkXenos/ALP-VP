@@ -26,9 +26,8 @@ fun BountyDetailsScreen(
     onViewApplicantsClick: (String) -> Unit,
     viewModel: BountyViewModel = viewModel()
 ) {
-    val repository = remember { MockRepository() }
-    val currentUser by repository.currentUser.collectAsState()
-    
+    val currentUser by MockRepository.currentUser.collectAsState()
+
     LaunchedEffect(bountyId) {
         viewModel.selectBounty(bountyId)
     }
@@ -123,7 +122,7 @@ fun BountyDetailsScreen(
 
                             Column {
                                 Text(
-                                    text = "Min Level",
+                                    text = "Recommended Level",
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                                 )
@@ -196,18 +195,69 @@ fun BountyDetailsScreen(
                     // Action Button based on user role
                     when (currentUser?.role) {
                         UserRole.TALENT -> {
-                            Button(
-                                onClick = { onApplyClick(bountyId) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text(
-                                    text = "Apply Now",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                // Show warning if user level is below recommended
+                                val isUnderLevel = (currentUser?.level ?: 0) < currentBounty.minLevel
+
+                                if (isUnderLevel) {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 8.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+                                        ),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            horizontalArrangement = Arrangement.Start,
+                                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "⚠️",
+                                                fontSize = 16.sp,
+                                                modifier = Modifier.padding(end = 8.dp)
+                                            )
+                                            Column {
+                                                Text(
+                                                    text = "Below Recommended Level",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.error
+                                                )
+                                                Text(
+                                                    text = "Your level: ${currentUser?.level ?: 0} | Recommended: ${currentBounty.minLevel}",
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Button(
+                                    onClick = { onApplyClick(bountyId) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(50.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = if (isUnderLevel) {
+                                        ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.tertiary
+                                        )
+                                    } else {
+                                        ButtonDefaults.buttonColors()
+                                    }
+                                ) {
+                                    Text(
+                                        text = "Apply Now",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                         UserRole.COMPANY -> {

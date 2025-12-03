@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ForumViewModel(private val repository: MockRepository = MockRepository()) : ViewModel() {
+class ForumViewModel : ViewModel() {
 
     private val _posts = MutableStateFlow<List<ForumPost>>(emptyList())
     val posts: StateFlow<List<ForumPost>> = _posts
@@ -19,7 +19,7 @@ class ForumViewModel(private val repository: MockRepository = MockRepository()) 
 
     private fun loadPosts() {
         viewModelScope.launch {
-            repository.forumPosts.collect { postList ->
+            MockRepository.forumPosts.collect { postList ->
                 _posts.value = postList
             }
         }

@@ -37,8 +37,6 @@ fun BountiesScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
 
-    var currentBottomTab by remember { mutableStateOf(0) }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -48,36 +46,6 @@ fun BountiesScreen(
                     titleContentColor = MaterialTheme.colorScheme.primary
                 )
             )
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface
-            ) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    label = { Text("Home") },
-                    selected = currentBottomTab == 0,
-                    onClick = { currentBottomTab = 0 }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Search, contentDescription = "Forums") },
-                    label = { Text("Forums") },
-                    selected = currentBottomTab == 1,
-                    onClick = {
-                        currentBottomTab = 1
-                        onNavigateToForums()
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                    label = { Text("Profile") },
-                    selected = currentBottomTab == 2,
-                    onClick = {
-                        currentBottomTab = 2
-                        onNavigateToProfile()
-                    }
-                )
-            }
         }
     ) { padding ->
         Column(

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class SubmissionViewModel(private val repository: MockRepository = MockRepository()) : ViewModel() {
+class SubmissionViewModel : ViewModel() {
 
     private val _submissionState = MutableStateFlow<SubmissionState>(SubmissionState.Idle)
     val submissionState: StateFlow<SubmissionState> = _submissionState
@@ -15,7 +15,7 @@ class SubmissionViewModel(private val repository: MockRepository = MockRepositor
     fun submitWork(bountyId: String, notes: String) {
         viewModelScope.launch {
             _submissionState.value = SubmissionState.Loading
-            val result = repository.submitWork(bountyId, notes)
+            val result = MockRepository.submitWork(bountyId, notes)
             _submissionState.value = if (result.isSuccess) {
                 SubmissionState.Success
             } else {

@@ -8,8 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.rememberNavController
-import com.jason.alp_vp.navigation.NavigationGraph
+import com.jason.alp_vp.ui.SideQuestApp
 import com.jason.alp_vp.ui.theme.ALPVPTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,8 +21,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val navController = rememberNavController()
-                    NavigationGraph(navController = navController)
+                    SideQuestApp()
                 }
             }
         }
