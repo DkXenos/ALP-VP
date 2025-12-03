@@ -18,6 +18,7 @@ data class Bounty(
 enum class BountyStatus {
     OPEN,
     IN_PROGRESS,
+    SUBMITTED,
     COMPLETED,
     CLOSED
 }

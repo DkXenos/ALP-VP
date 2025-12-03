@@ -1,5 +1,6 @@
 package com.jason.alp_vp.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,6 +27,7 @@ import com.jason.alp_vp.viewmodel.ApplicationViewModel
 fun UserRegisteredScreen(
     bountyId: String,
     onNavigateBack: () -> Unit,
+    onViewApplicantDetails: (String) -> Unit = {},
     viewModel: ApplicationViewModel = viewModel()
 ) {
     LaunchedEffect(bountyId) {
@@ -82,6 +84,7 @@ fun UserRegisteredScreen(
                     items(applications) { application ->
                         ApplicantCard(
                             application = application,
+                            onViewDetails = { onViewApplicantDetails(application.applicantId) },
                             onAccept = {
                                 viewModel.updateApplicationStatus(
                                     application.id,
@@ -105,11 +108,14 @@ fun UserRegisteredScreen(
 @Composable
 fun ApplicantCard(
     application: Application,
+    onViewDetails: () -> Unit,
     onAccept: () -> Unit,
     onReject: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onViewDetails),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface

@@ -159,6 +159,10 @@ object MockRepository {
         return Result.success(newUser)
     }
 
+    fun logout() {
+        _currentUser.value = null
+    }
+
     // Bounty Operations
     fun getBountyById(id: String): Bounty? {
         return BountyDataSource.getBountyById(id)
@@ -236,5 +240,23 @@ object MockRepository {
             "https://via.placeholder.com/300x200/00C853/FFFFFF?text=Project+6"
         )
     }
-}
 
+    // Get active bounties for current user (accepted bounties)
+    fun getActiveBountiesForUser(): List<Bounty> {
+        val user = _currentUser.value ?: return emptyList()
+
+        // Get accepted applications for this user
+        val acceptedBountyIds = _applications.value
+            .filter { it.applicantId == user.id && it.status == ApplicationStatus.ACCEPTED }
+            .map { it.bountyId }
+
+        // Return bounties that user has been accepted for
+        return _bounties.value
+            .filter { it.id in acceptedBountyIds }
+            .map { bounty ->
+                // Set status to IN_PROGRESS for active bounties
+                bounty.copy(status = BountyStatus.IN_PROGRESS)
+            }
+            .take(3) // Max 3 active bounties
+    }
+}

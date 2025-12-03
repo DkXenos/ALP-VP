@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jason.alp_vp.model.UserRole
 import com.jason.alp_vp.repository.MockRepository
+import com.jason.alp_vp.ui.components.formatRupiah
 import com.jason.alp_vp.viewmodel.BountyViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

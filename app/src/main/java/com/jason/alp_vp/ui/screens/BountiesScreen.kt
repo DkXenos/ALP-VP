@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jason.alp_vp.model.Bounty
+import com.jason.alp_vp.ui.components.BountyCard
 import com.jason.alp_vp.viewmodel.BountyViewModel
 import java.text.NumberFormat
 import java.util.*
@@ -31,11 +33,13 @@ fun BountiesScreen(
     onBountyClick: (String) -> Unit,
     onNavigateToForums: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onCreateBounty: () -> Unit = {},
     viewModel: BountyViewModel = viewModel()
 ) {
     val bounties by viewModel.bounties.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
+    val currentUser by com.jason.alp_vp.repository.MockRepository.currentUser.collectAsState()
 
     Scaffold(
         topBar = {
@@ -46,6 +50,20 @@ fun BountiesScreen(
                     titleContentColor = MaterialTheme.colorScheme.primary
                 )
             )
+        },
+        floatingActionButton = {
+            // Show Create Bounty button only for companies
+            if (currentUser?.role == com.jason.alp_vp.model.UserRole.COMPANY) {
+                FloatingActionButton(
+                    onClick = onCreateBounty,
+                    containerColor = MaterialTheme.colorScheme.secondary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Create Bounty"
+                    )
+                }
+            }
         }
     ) { padding ->
         Column(
@@ -97,125 +115,5 @@ fun BountiesScreen(
             }
         }
     }
-}
-
-@Composable
-fun BountyCard(
-    bounty: Bounty,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = bounty.title,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Text(
-                        text = bounty.companyName,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-
-                // Level Badge
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = when (bounty.category) {
-                        "Expert" -> MaterialTheme.colorScheme.primary
-                        else -> MaterialTheme.colorScheme.secondary
-                    }
-                ) {
-                    Text(
-                        text = "Lvl ${bounty.minLevel}+",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Price
-                Column {
-                    Text(
-                        text = "Reward",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    Text(
-                        text = formatRupiah(bounty.price),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-
-                // XP
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "XP Reward",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    Text(
-                        text = "+${bounty.xp} XP",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-
-            if (bounty.isEvent) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                ) {
-                    Text(
-                        text = "🎯 EVENT BOUNTY",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-fun formatRupiah(amount: Double): String {
-    val format = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-    return format.format(amount).replace("Rp", "Rp ")
 }
 

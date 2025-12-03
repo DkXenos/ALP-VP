@@ -28,6 +28,7 @@ fun BountySubmissionScreen(
     onSubmissionSuccess: () -> Unit,
     viewModel: SubmissionViewModel = viewModel()
 ) {
+    var submissionLink by remember { mutableStateOf("") }
     var submissionNotes by remember { mutableStateOf("") }
     val submissionState by viewModel.submissionState.collectAsState()
 
@@ -61,95 +62,95 @@ fun BountySubmissionScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Upload Your Work",
+                text = "Submit Your Work",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Upload your completed work and add any notes for the client",
+                text = "Provide a link to your completed work and add any notes for the client",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // File Upload Placeholder
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
+            // Submission Link Input
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
                     Text(
-                        text = "Click to upload files",
+                        text = "Submission Link *",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onBackground
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Text(
-                        text = "or drag and drop",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = submissionLink,
+                        onValueChange = { submissionLink = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("https://github.com/yourproject or Google Drive link...") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null
+                            )
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp)
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "PDF, ZIP, or Image files",
+                        text = "💡 Examples: GitHub repository, Google Drive, Figma link, deployed website URL",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.primary,
+                        lineHeight = 16.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
+            // Submission Notes
             OutlinedTextField(
                 value = submissionNotes,
                 onValueChange = { submissionNotes = it },
-                label = { Text("Submission Notes") },
+                label = { Text("Additional Notes (Optional)") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp),
                 placeholder = {
-                    Text("Add any notes about your submission...")
+                    Text("Add any notes about your submission, challenges faced, or additional details...")
                 },
-                maxLines = 8
+                maxLines = 8,
+                shape = RoundedCornerShape(8.dp)
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
-                    viewModel.submitWork(bountyId, submissionNotes)
+                    viewModel.submitWork(bountyId, "Link: $submissionLink\nNotes: $submissionNotes")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(8.dp),
-                enabled = submissionState !is SubmissionState.Loading
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                enabled = submissionState !is SubmissionState.Loading && submissionLink.isNotBlank()
             ) {
                 if (submissionState is SubmissionState.Loading) {
                     CircularProgressIndicator(
