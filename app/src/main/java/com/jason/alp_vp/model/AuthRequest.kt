@@ -1,8 +1,24 @@
 package com.jason.alp_vp.model
-
-data class AuthRequest(
-    val username: String? = null,
+import com.google.gson.annotations.SerializedName
+/**
+ * Login request
+ */
+data class LoginRequest(
+    @SerializedName("email")
     val email: String,
-    val password: String,
-    val role: String? = null
+    @SerializedName("password")
+    val password: String
+)
+/**
+ * Register request
+ */
+data class RegisterRequest(
+    @SerializedName("username")
+    val username: String,
+
+    @SerializedName("email")
+    val email: String,
+
+    @SerializedName("password")
+    val password: String
 )
