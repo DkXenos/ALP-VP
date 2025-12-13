@@ -13,7 +13,6 @@ import com.jason.alp_vp.ui.view.HomePage
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             ALPVPTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
