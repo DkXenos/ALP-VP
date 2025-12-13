@@ -18,19 +18,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
+import java.time.Duration
+import java.time.Instant
 
 @Composable
 fun PostCard(
-    id: String,
+    id: Int,
     content: String,
-    createdAt: Long,
+    createdAt: Instant,
     upvoteCount: Int,
     downvoteCount: Int,
     onUpvote: () -> Unit = {},
     onDownvote: () -> Unit = {}
 ) {
-    // use id in a remembered value so static analysis recognizes it's used
     val tag = remember(id) { "post_$id" }
+    val hoursAgo = Duration.between(createdAt, Instant.now()).toHours()
+
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF14161A)),
@@ -70,7 +73,20 @@ fun PostCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Text(text = "${(System.currentTimeMillis() - createdAt) / 3600000}h", color = Color(0xFF98A0B3), fontSize = 12.sp)
+            Text(text = "${hoursAgo}h", color = Color(0xFF98A0B3), fontSize = 12.sp)
         }
     }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun PostCardPreview() {
+    val now = java.time.Instant.now()
+    PostCard(
+        id = 1,
+        content = "Just completed a small refactor to improve the UI responsiveness. Here's a longer sample content to exercise the ellipsis truncation.",
+        createdAt = now.minusSeconds(60 * 60),
+        upvoteCount = 24,
+        downvoteCount = 3
+    )
 }

@@ -2,32 +2,27 @@ package com.jason.alp_vp.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jason.alp_vp.ui.model.EventPost
+import com.jason.alp_vp.data.repository.EventRepository
+import com.jason.alp_vp.data.repository.PostRepository
+import com.jason.alp_vp.ui.model.Event
 import com.jason.alp_vp.ui.model.Post
-import com.jason.alp_vp.ui.model.Vote
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 
-/**
- * ForumPageViewModel holds dummy events and posts.
- * It computes vote totals for each post and exposes PostUi for the UI.
- */
 class ForumPageViewModel : ViewModel() {
 
-    // existing event posts flow (kept for UI)
-    private val _eventPosts = MutableStateFlow<List<EventPost>>(emptyList())
-    val eventPosts: StateFlow<List<EventPost>> = _eventPosts
+    private val eventRepo = EventRepository
+    private val postRepo = PostRepository
 
-    // raw posts with votes
+    private val _events = MutableStateFlow<List<Event>>(emptyList())
+    val events: StateFlow<List<Event>> = _events
+
     private val _posts = MutableStateFlow<List<Post>>(emptyList())
     val posts: StateFlow<List<Post>> = _posts
 
-    // UI-friendly posts with computed counts
     data class PostUi(
         val post: Post,
         val upvoteCount: Int,
@@ -37,114 +32,163 @@ class ForumPageViewModel : ViewModel() {
     private val _postUis = MutableStateFlow<List<PostUi>>(emptyList())
     val postUis: StateFlow<List<PostUi>> = _postUis
 
+    // State untuk Post Detail
+    private val _selectedPost = MutableStateFlow<Post?>(null)
+    val selectedPost: StateFlow<Post?> = _selectedPost
+
+    private val _selectedPostReplies = MutableStateFlow<List<Post>>(emptyList())
+    val selectedPostReplies: StateFlow<List<Post>> = _selectedPostReplies
+
+    private val currentUserId = 1 // Mock current user ID
+
     init {
-        loadDummyEvents()
-        loadDummyPosts()
+        loadData()
     }
 
-    private fun loadDummyEvents() {
+    private fun loadData() {
         viewModelScope.launch {
-            val now = Instant.now()
-            val dummy = listOf(
-                EventPost(
-                    id = "evt1",
-                    title = "🎯 Tech Startup Hiring Event",
-                    organizer = "InnovateTech Corp",
-                    description = "Join us for an exclusive hiring event! We're looking for talented developers, designers, and marketers. Register now for priority access to our bounties!",
-                    registered = 45,
-                    capacity = 100,
-                    badgeEmoji = "📅",
-                    timeRemaining = Duration.ofHours(2).plusMinutes(13),
-                    createdAt = now
-                ),
-                EventPost(
-                    id = "evt2",
-                    title = "🚀 Freelancer Networking Session",
-                    organizer = "SideQuest Community",
-                    description = "Connect with other freelancers, share tips, and learn about upcoming opportunities. Special guest speakers from top companies!",
-                    registered = 78,
-                    capacity = 150,
-                    badgeEmoji = "📅",
-                    timeRemaining = Duration.ofHours(5).plusMinutes(29),
-                    createdAt = now.minusSeconds(3600)
-                )
-            )
-
-            _eventPosts.update { dummy }
-        }
-    }
-
-    private fun loadDummyPosts() {
-        viewModelScope.launch {
-            val now = System.currentTimeMillis()
-            val p1Votes = listOf(
-                Vote(id = UUID.randomUUID().toString(), voteType = "upvote", createdAt = now - 60_000),
-                Vote(id = UUID.randomUUID().toString(), voteType = "upvote", createdAt = now - 120_000),
-                Vote(id = UUID.randomUUID().toString(), voteType = "downvote", createdAt = now - 30_000)
-            )
-            val p2Votes = listOf(
-                Vote(id = UUID.randomUUID().toString(), voteType = "upvote", createdAt = now - 300_000)
-            )
-
-            val posts = listOf(
-                Post(id = "p1", content = "Just shipped a small lib for animations — feedback welcome!", createdAt = now - 3_600_000, votes = p1Votes),
-                Post(id = "p2", content = "Looking for UI feedback on my new design system.", createdAt = now - 7_200_000, votes = p2Votes)
-            )
-
-            _posts.update { posts }
-            recomputePostUis(posts)
+            _events.value = eventRepo.getAllEvents()
+            val allPosts = postRepo.getAllPosts()
+            _posts.value = allPosts
+            recomputePostUis(allPosts)
         }
     }
 
     private fun recomputePostUis(posts: List<Post>) {
         val ui = posts.map { post ->
-            val up = post.votes.count { it.voteType.equals("upvote", ignoreCase = true) }
-            val down = post.votes.count { it.voteType.equals("downvote", ignoreCase = true) }
-            PostUi(post = post, upvoteCount = up, downvoteCount = down)
-        }
-        _postUis.update { ui }
-    }
+            var upvoteCount = 0
+            var downvoteCount = 0
 
-    /**
-     * Add an upvote to a post (creates a Vote with unique id)
-     */
-    fun upvote(postId: String) {
-        viewModelScope.launch {
-            // Build updated list explicitly, set it, then recompute UI counts
-            val newList = _posts.value.map { post ->
-                if (post.id == postId) {
-                    val newVote = Vote(id = UUID.randomUUID().toString(), voteType = "upvote", createdAt = System.currentTimeMillis())
-                    post.copy(votes = post.votes + newVote)
-                } else post
+            post.comments.forEach { comment ->
+                comment.commentVotes.forEach { commentVote ->
+                    val vote = postRepo.getVote(commentVote.voteId)
+                    when (vote?.voteType) {
+                        "upvote" -> upvoteCount++
+                        "downvote" -> downvoteCount++
+                    }
+                }
             }
-            _posts.value = newList
-            recomputePostUis(newList)
+
+            PostUi(post = post, upvoteCount = upvoteCount, downvoteCount = downvoteCount)
         }
+        _postUis.value = ui
     }
 
-    /**
-     * Add a downvote to a post (creates a Vote with unique id)
-     */
-    fun downvote(postId: String) {
+    fun upvote(postId: Int) {
         viewModelScope.launch {
-            val newList = _posts.value.map { post ->
-                if (post.id == postId) {
-                    val newVote = Vote(id = UUID.randomUUID().toString(), voteType = "downvote", createdAt = System.currentTimeMillis())
-                    post.copy(votes = post.votes + newVote)
-                } else post
+            // Find first comment in post and add upvote to it
+            val post = postRepo.getPost(postId)
+            post?.comments?.firstOrNull()?.let { comment ->
+                postRepo.addUpvoteToComment(comment.id)
+                loadData() // Reload to get updated data
             }
-            _posts.value = newList
-            recomputePostUis(newList)
         }
     }
 
-    // helper to simulate adding/removing for testing
-    fun registerToEvent(eventId: String) {
-        _eventPosts.update { list ->
-            list.map {
-                if (it.id == eventId && it.registered < it.capacity) {
-                    it.copy(registered = it.registered + 1)
-                } else it
+    fun downvote(postId: Int) {
+        viewModelScope.launch {
+            val post = postRepo.getPost(postId)
+            post?.comments?.firstOrNull()?.let { comment ->
+                postRepo.addDownvoteToComment(comment.id)
+                loadData()
+            }
+        }
+    }
+
+    fun registerToEvent(eventId: Int) {
+        viewModelScope.launch {
+            val success = eventRepo.register(eventId, currentUserId)
+            if (success) {
+                _events.value = eventRepo.getAllEvents()
+            }
+        }
+    }
+
+    fun formatDurationShort(eventDate: Instant): String {
+        val now = Instant.now()
+        val duration = Duration.between(now, eventDate)
+
+        if (duration.isNegative) return "Ended"
+
+        val totalMinutes = duration.toMinutes()
+        val days = totalMinutes / (60 * 24)
+        val hours = (totalMinutes % (60 * 24)) / 60
+        val minutes = totalMinutes % 60
+
+        return when {
+            days > 0 -> "${days}d ${hours}h"
+            hours > 0 -> "${hours}h ${minutes}m"
+            else -> "${minutes}m"
+        }
+    }
+
+    // Fungsi untuk Post Detail
+    fun selectPost(postId: Int) {
+        viewModelScope.launch {
+            val post = _posts.value.find { it.id == postId }
+            _selectedPost.value = post
+            // Load replies (mock data untuk sekarang)
+            _selectedPostReplies.value = emptyList()
+        }
+    }
+
+    fun upvotePost(postId: Int) {
+        viewModelScope.launch {
+            // Implementasi upvote untuk post
+            val post = postRepo.getPost(postId)
+            post?.comments?.firstOrNull()?.let { comment ->
+                postRepo.addUpvoteToComment(comment.id)
+                // Reload selected post
+                selectPost(postId)
+                loadData()
+            }
+        }
+    }
+
+    fun downvotePost(postId: Int) {
+        viewModelScope.launch {
+            // Implementasi downvote untuk post
+            val post = postRepo.getPost(postId)
+            post?.comments?.firstOrNull()?.let { comment ->
+                postRepo.addDownvoteToComment(comment.id)
+                // Reload selected post
+                selectPost(postId)
+                loadData()
+            }
+        }
+    }
+
+    fun upvoteReply(replyId: Int) {
+        viewModelScope.launch {
+            // Implementasi upvote untuk reply
+            val reply = postRepo.getPost(replyId)
+            reply?.comments?.firstOrNull()?.let { comment ->
+                postRepo.addUpvoteToComment(comment.id)
+                // Reload replies
+                _selectedPost.value?.let { selectPost(it.id) }
+            }
+        }
+    }
+
+    fun downvoteReply(replyId: Int) {
+        viewModelScope.launch {
+            // Implementasi downvote untuk reply
+            val reply = postRepo.getPost(replyId)
+            reply?.comments?.firstOrNull()?.let { comment ->
+                postRepo.addDownvoteToComment(comment.id)
+                // Reload replies
+                _selectedPost.value?.let { selectPost(it.id) }
+            }
+        }
+    }
+
+    fun sendReply(content: String) {
+        viewModelScope.launch {
+            // Implementasi send reply
+            _selectedPost.value?.let { post ->
+                // TODO: Create new reply post and add to selectedPostReplies
+                // For now, just reload
+                selectPost(post.id)
             }
         }
     }
