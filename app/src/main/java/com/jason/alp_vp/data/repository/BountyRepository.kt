@@ -22,7 +22,7 @@ class BountyRepository(
 ) {
     companion object {
         // TODO: Set to true when backend is ready
-        private const val USE_API_DATA = false
+        private const val USE_API_DATA = true
 
         @Volatile
         private var instance: BountyRepository? = null
