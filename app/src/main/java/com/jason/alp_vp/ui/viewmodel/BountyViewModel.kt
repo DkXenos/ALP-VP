@@ -3,14 +3,11 @@ package com.jason.alp_vp.ui.viewmodel
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import com.jason.alp_vp.ui.model.Bounty
-import com.jason.alp_vp.ui.model.Event
+
 
 class BountyViewModel : ViewModel() {
 
     var activeBounties by mutableStateOf(listOf<Bounty>())
-        private set
-
-    var events by mutableStateOf(listOf<Event>())
         private set
 
     init {
@@ -34,11 +31,6 @@ class BountyViewModel : ViewModel() {
                 rewardMoney = 350000,
                 status = "active"
             )
-        )
-
-        events = listOf(
-            Event("1", "AI Seminar", "Dec 2025", "Seminar about AI Trends"),
-            Event("2", "Startup Bootcamp", "Jan 2026", "Learn about startups"),
         )
     }
 

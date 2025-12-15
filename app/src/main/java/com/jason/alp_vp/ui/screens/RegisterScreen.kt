@@ -17,10 +17,13 @@ fun RegisterScreen(nav: NavController) {
     var password by remember { mutableStateOf("") }
 
     val authResponse by vm.authResponse.collectAsState()
+    val error by vm.error.collectAsState()
 
     LaunchedEffect(authResponse) {
         if (authResponse != null) {
-            nav.navigate("success")
+            nav.navigate("success") {
+                popUpTo("register") { inclusive = true }
+            }
         }
     }
 
@@ -28,19 +31,46 @@ fun RegisterScreen(nav: NavController) {
         Text("Register", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(20.dp))
 
-        OutlinedTextField(value = username, onValueChange = { username = it }, label = { Text("Username") })
+        OutlinedTextField(
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") }
+        )
+
         Spacer(Modifier.height(12.dp))
 
-        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") }
+        )
+
         Spacer(Modifier.height(12.dp))
 
-        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") }
+        )
+
         Spacer(Modifier.height(20.dp))
 
-        Button(onClick = {
-            vm.register(username, email, password)
-        }, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = {
+                vm.register(username, email, password)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Register")
+        }
+
+        // Tampilin error
+        if (error != null) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = error ?: "",
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         Spacer(Modifier.height(20.dp))
@@ -50,3 +80,4 @@ fun RegisterScreen(nav: NavController) {
         }
     }
 }
+
