@@ -2,14 +2,14 @@ package com.jason.alp_vp.data.repository
 
 import com.jason.alp_vp.data.service.CompanyService
 import com.jason.alp_vp.ui.model.Company as UiCompany
+import com.jason.alp_vp.data.service.CompanyRegisterRequest
+import com.jason.alp_vp.data.service.CompanyResponse
+import com.jason.alp_vp.data.service.UpdateCompanyRequest
 
-/**
- * Repository wrapper for company-related API calls.
- */
 class CompanyRepository(private val service: CompanyService) {
 
     suspend fun register(name: String, email: String, password: String, description: String? = null): Pair<String, UiCompany> {
-        val req = com.jason.alp_vp.data.service.CompanyRegisterRequest(
+        val req = CompanyRegisterRequest(
             name = name,
             email = email,
             password = password,
@@ -61,7 +61,7 @@ class CompanyRepository(private val service: CompanyService) {
     }
 
     suspend fun updateCompany(id: String, name: String? = null, description: String? = null, logo: String? = null): UiCompany {
-        val req = com.jason.alp_vp.data.service.UpdateCompanyRequest(
+        val req = UpdateCompanyRequest(
             name = name,
             description = description,
             logo = logo
@@ -85,9 +85,7 @@ class CompanyRepository(private val service: CompanyService) {
         }
     }
 
-    private fun mapToUi(item: com.jason.alp_vp.data.service.CompanyResponse): UiCompany {
-        // service.CompanyResponse fields: id:String, name:String, email:String, description:String?, logo:String?, walletBalance:Double, followersCount:Int, followingCount:Int, followedPagesCount:Int
-        // UI model expects id:Int - try to convert safely
+    private fun mapToUi(item: CompanyResponse): UiCompany {
         val idInt = try { item.id.toInt() } catch (_: Exception) { 0 }
         return UiCompany(
             id = idInt,
