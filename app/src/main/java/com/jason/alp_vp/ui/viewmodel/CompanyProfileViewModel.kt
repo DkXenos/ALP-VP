@@ -2,7 +2,6 @@ package com.jason.alp_vp.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jason.alp_vp.ui.model.Bounty
 import com.jason.alp_vp.ui.model.Company
 import com.jason.alp_vp.ui.model.PaymentMethod
 import com.jason.alp_vp.ui.model.WalletTransaction
@@ -21,11 +20,11 @@ class CompanyProfileViewModel : ViewModel() {
     private val _walletBalance = MutableStateFlow(0.0)
     val walletBalance: StateFlow<Double> = _walletBalance.asStateFlow()
 
-    private val _activeBounties = MutableStateFlow<List<Bounty>>(emptyList())
-    val activeBounties: StateFlow<List<Bounty>> = _activeBounties.asStateFlow()
+    private val _activeBounties = MutableStateFlow<List<`Bounty.kt`>>(emptyList())
+    val activeBounties: StateFlow<List<`Bounty.kt`>> = _activeBounties.asStateFlow()
 
-    private val _expiredBounties = MutableStateFlow<List<Bounty>>(emptyList())
-    val expiredBounties: StateFlow<List<Bounty>> = _expiredBounties.asStateFlow()
+    private val _expiredBounties = MutableStateFlow<List<`Bounty.kt`>>(emptyList())
+    val expiredBounties: StateFlow<List<`Bounty.kt`>> = _expiredBounties.asStateFlow()
 
     private val _followersCount = MutableStateFlow(0)
     val followersCount: StateFlow<Int> = _followersCount.asStateFlow()
@@ -70,7 +69,7 @@ class CompanyProfileViewModel : ViewModel() {
                 )
 
                 val activeBountiesData = listOf(
-                    Bounty(
+                    `Bounty.kt`(
                         id = "bounty_1",
                         title = "Mobile App UI/UX Design",
                         description = "Create modern mobile app interface for e-commerce platform with dark theme and smooth animations",
@@ -82,7 +81,7 @@ class CompanyProfileViewModel : ViewModel() {
                         createdAt = Instant.now().minus(2, ChronoUnit.DAYS),
                         deadline = Instant.now().plus(5, ChronoUnit.DAYS)
                     ),
-                    Bounty(
+                    `Bounty.kt`(
                         id = "bounty_2",
                         title = "Android Kotlin Development",
                         description = "Develop native Android application with MVVM architecture and Jetpack Compose",
@@ -94,7 +93,7 @@ class CompanyProfileViewModel : ViewModel() {
                         createdAt = Instant.now().minus(1, ChronoUnit.DAYS),
                         deadline = Instant.now().plus(7, ChronoUnit.DAYS)
                     ),
-                    Bounty(
+                    `Bounty.kt`(
                         id = "event_1",
                         title = "Tech Conference 2024",
                         description = "Annual technology conference with industry leaders and networking opportunities",
@@ -108,7 +107,7 @@ class CompanyProfileViewModel : ViewModel() {
                         quota = 100,
                         countdownEnd = Instant.now().plus(10, ChronoUnit.DAYS)
                     ),
-                    Bounty(
+                    `Bounty.kt`(
                         id = "event_2",
                         title = "Mobile Dev Workshop",
                         description = "Hands-on workshop for mobile development with React Native and Flutter",
@@ -125,7 +124,7 @@ class CompanyProfileViewModel : ViewModel() {
                 )
 
                 val expiredBountiesData = listOf(
-                    Bounty(
+                    `Bounty.kt`(
                         id = "bounty_exp_1",
                         title = "Backend API Development",
                         description = "REST API development for mobile application with Node.js and MongoDB",
@@ -137,7 +136,7 @@ class CompanyProfileViewModel : ViewModel() {
                         createdAt = Instant.now().minus(30, ChronoUnit.DAYS),
                         deadline = Instant.now().minus(5, ChronoUnit.DAYS)
                     ),
-                    Bounty(
+                    `Bounty.kt`(
                         id = "bounty_exp_2",
                         title = "Web Scraping Project",
                         description = "Create automated web scraping tool with Python and Beautiful Soup",

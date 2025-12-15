@@ -13,7 +13,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jason.alp_vp.ui.model.Bounty
 import java.text.NumberFormat
 import java.time.Duration
 import java.time.Instant
@@ -21,8 +20,8 @@ import java.util.Locale
 
 @Composable
 fun ActiveBountiesSection(
-    activeBounties: List<Bounty>,
-    onBountyClick: (Bounty) -> Unit,
+    activeBounties: List<`Bounty.kt`>,
+    onBountyClick: (`Bounty.kt`) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -67,7 +66,7 @@ fun ActiveBountiesSection(
 
 @Composable
 fun BountyCard(
-    bounty: Bounty,
+    bounty: `Bounty.kt`,
     onClick: () -> Unit,
     isExpired: Boolean = false,
     modifier: Modifier = Modifier

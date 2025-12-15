@@ -2,8 +2,6 @@ package com.jason.alp_vp.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jason.alp_vp.data.repository.EventRepository
-import com.jason.alp_vp.data.repository.PostRepository
 import com.jason.alp_vp.ui.model.Event
 import com.jason.alp_vp.ui.model.Post
 import kotlinx.coroutines.flow.MutableStateFlow

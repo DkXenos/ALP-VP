@@ -101,6 +101,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         composable(Screen.WalletDetails.route) {
             WalletDetailsView(onNavigateBack = { navController.popBackStack() }, onAddPaymentMethod = { /* TODO */ })
         }
+
+        composable(Screen.Create.route) {
+            CreatePage(onNavigateBack = { navController.popBackStack() })
+        }
     }
 }
 
