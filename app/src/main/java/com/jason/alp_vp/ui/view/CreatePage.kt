@@ -20,7 +20,6 @@ import com.jason.alp_vp.ui.viewmodel.CreateType
 import java.text.NumberFormat
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreatePage(
     onNavigateBack: () -> Unit = {},
@@ -34,54 +33,29 @@ fun CreatePage(
     val successMessage by viewModel.successMessage.collectAsState()
     val walletBalance by viewModel.walletBalance.collectAsState()
 
-    // Show success message as snackbar
-    val snackbarHostState = remember { SnackbarHostState() }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
 
-    LaunchedEffect(successMessage) {
-        successMessage?.let {
-            snackbarHostState.showSnackbar(
-                message = it,
-                duration = SnackbarDuration.Short
-            )
-            viewModel.clearMessages()
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Create ${if (selectedType == CreateType.BOUNTY) "Bounty" else "Event"}",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0A0B0F)
+        // Success message
+        successMessage?.let { msg ->
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1D3D1A)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = msg,
+                    color = Color(0xFF57D06A),
+                    modifier = Modifier.padding(16.dp)
                 )
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color(0xFF0A0B0F)
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-        ) {
+            }
             Spacer(modifier = Modifier.height(16.dp))
+        }
 
             // Wallet Balance Card
             WalletBalanceDisplay(balance = walletBalance)

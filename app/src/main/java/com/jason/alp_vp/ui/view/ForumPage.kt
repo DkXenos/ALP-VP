@@ -42,7 +42,8 @@ private val SubText = Color(0xFF98A0B3)
 fun ForumPage(
     viewModel: ForumPageViewModel = viewModel(),
     onNavigateToEventPage: () -> Unit = {},
-    onNavigateToPostPage: () -> Unit = {}
+    onNavigateToPostPage: () -> Unit = {},
+    onNavigateToPostDetail: (Int) -> Unit = {}
 ) {
     val events by viewModel.events.collectAsState()
     val postUis by viewModel.postUis.collectAsState()
@@ -130,7 +131,8 @@ fun ForumPage(
                     upvoteCount = postUi.upvoteCount,
                     downvoteCount = postUi.downvoteCount,
                     onUpvote = { viewModel.upvote(postUi.post.id) },
-                    onDownvote = { viewModel.downvote(postUi.post.id) }
+                    onDownvote = { viewModel.downvote(postUi.post.id) },
+                    onClick = { onNavigateToPostDetail(postUi.post.id) }
                 )
             }
 

@@ -29,12 +29,14 @@ fun PostCard(
     upvoteCount: Int,
     downvoteCount: Int,
     onUpvote: () -> Unit = {},
-    onDownvote: () -> Unit = {}
+    onDownvote: () -> Unit = {},
+    onClick: () -> Unit = {}
 ) {
     val tag = remember(id) { "post_$id" }
     val hoursAgo = Duration.between(createdAt, Instant.now()).toHours()
 
     Card(
+        onClick = onClick,
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF14161A)),
         elevation = CardDefaults.cardElevation(4.dp),

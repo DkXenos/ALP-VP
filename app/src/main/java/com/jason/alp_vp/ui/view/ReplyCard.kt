@@ -28,16 +28,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jason.alp_vp.ui.model.Post
+import com.jason.alp_vp.ui.model.Comment
+import java.time.Duration
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @Composable
-fun ReplyItem(reply: Post, authorInitial: String = "S", authorName: String = "User", onUpvote: () -> Unit = {}, onDownvote: () -> Unit = {}) {
-    // Hitung votes dari comments
-    val upvotes = 0
-    val downvotes = 0
-    // TODO: Implement vote counting from reply.comments
+fun ReplyItem(
+    comment: Comment,
+    authorName: String = "User",
+    onUpvote: (Int) -> Unit = {},
+    onDownvote: (Int) -> Unit = {}
+) {
+    val authorInitial = authorName.firstOrNull()?.toString()?.uppercase() ?: "U"
+    val upvotes = comment.commentVotes.count { it.voteType == "upvote" }
+    val downvotes = comment.commentVotes.count { it.voteType == "downvote" }
+    val timeAgo = formatTimeAgo(comment.createdAt)
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF14161A)),
         shape = RoundedCornerShape(12.dp),
@@ -64,18 +74,18 @@ fun ReplyItem(reply: Post, authorInitial: String = "S", authorName: String = "Us
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(authorName, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))
-                        Text(text = "1h ago", color = Color(0xFF98A0B3), fontSize = 12.sp)
+                        Text(text = timeAgo, color = Color(0xFF98A0B3), fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    Text(text = reply.content, color = Color(0xFFDDE1E6), fontSize = 14.sp, maxLines = 4, overflow = TextOverflow.Ellipsis)
+                    Text(text = comment.content, color = Color(0xFFDDE1E6), fontSize = 14.sp, maxLines = 4, overflow = TextOverflow.Ellipsis)
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Button (
-                            onClick = onUpvote,
+                            onClick = { onUpvote(comment.id) },
                             colors = ButtonDefaults.buttonColors(Color(0xFF17291E)),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 1.dp)
                         ) {
@@ -92,7 +102,7 @@ fun ReplyItem(reply: Post, authorInitial: String = "S", authorName: String = "Us
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Button (
-                            onClick = onDownvote,
+                            onClick = { onDownvote(comment.id) },
                             colors = ButtonDefaults.buttonColors(Color(0xFF291717)),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 1.dp)
                         ) {
@@ -112,18 +122,37 @@ fun ReplyItem(reply: Post, authorInitial: String = "S", authorName: String = "Us
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+// Helper function to format time ago
+private fun formatTimeAgo(instant: Instant): String {
+    val now = Instant.now()
+    val duration = Duration.between(instant, now)
+
+    return when {
+        duration.toMinutes() < 1 -> "just now"
+        duration.toMinutes() < 60 -> "${duration.toMinutes()}m ago"
+        duration.toHours() < 24 -> "${duration.toHours()}h ago"
+        duration.toDays() < 7 -> "${duration.toDays()}d ago"
+        duration.toDays() < 30 -> "${duration.toDays() / 7}w ago"
+        duration.toDays() < 365 -> "${duration.toDays() / 30}mo ago"
+        else -> "${duration.toDays() / 365}y ago"
+    }
+}
+
+@Preview(showBackground = true)
 @Composable
 fun ReplyItemPreview() {
-    val now = java.time.Instant.now()
-    val sampleReply = com.jason.alp_vp.ui.model.Post(
+    val now = java.time.Instant.now().minus(2, ChronoUnit.HOURS)
+    val sampleComment = Comment(
         id = 2,
-        userId = 10,
+        postId = 1,
         content = "Nice work! Could you share the repo link?",
-        image = null,
         createdAt = now,
-        comments = emptyList()
+        commentVotes = listOf(
+            com.jason.alp_vp.ui.model.CommentVote(commentId = 2, voteId = 1, voteType = "upvote"),
+            com.jason.alp_vp.ui.model.CommentVote(commentId = 2, voteId = 2, voteType = "upvote"),
+            com.jason.alp_vp.ui.model.CommentVote(commentId = 2, voteId = 3, voteType = "downvote")
+        )
     )
 
-    ReplyItem(reply = sampleReply, authorInitial = "N", authorName = "Nina")
+    ReplyItem(comment = sampleComment, authorName = "Nina")
 }

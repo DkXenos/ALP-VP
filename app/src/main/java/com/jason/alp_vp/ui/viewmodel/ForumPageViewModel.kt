@@ -2,18 +2,19 @@ package com.jason.alp_vp.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jason.alp_vp.data.container.AppContainer
 import com.jason.alp_vp.ui.model.Event
 import com.jason.alp_vp.ui.model.Post
+import com.jason.alp_vp.ui.model.Comment
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
 
-class ForumPageViewModel : ViewModel() {
-
-    private val eventRepo = EventRepository
-    private val postRepo = PostRepository
+class ForumPageViewModel(
+    private val container: AppContainer = AppContainer()
+) : ViewModel() {
 
     private val _events = MutableStateFlow<List<Event>>(emptyList())
     val events: StateFlow<List<Event>> = _events
@@ -34,8 +35,8 @@ class ForumPageViewModel : ViewModel() {
     private val _selectedPost = MutableStateFlow<Post?>(null)
     val selectedPost: StateFlow<Post?> = _selectedPost
 
-    private val _selectedPostReplies = MutableStateFlow<List<Post>>(emptyList())
-    val selectedPostReplies: StateFlow<List<Post>> = _selectedPostReplies
+    private val _selectedPostReplies = MutableStateFlow<List<Comment>>(emptyList())
+    val selectedPostReplies: StateFlow<List<Comment>> = _selectedPostReplies
 
     private val currentUserId = 1 // Mock current user ID
 
@@ -45,10 +46,19 @@ class ForumPageViewModel : ViewModel() {
 
     private fun loadData() {
         viewModelScope.launch {
-            _events.value = eventRepo.getAllEvents()
-            val allPosts = postRepo.getAllPosts()
-            _posts.value = allPosts
-            recomputePostUis(allPosts)
+            try {
+                // TODO: Load events from backend when EventRepository is ready
+                _events.value = emptyList()
+
+                // TODO: Load posts from backend when PostRepository is ready
+                _posts.value = emptyList()
+
+                recomputePostUis(emptyList())
+            } catch (e: Exception) {
+                // Handle error
+                _events.value = emptyList()
+                _posts.value = emptyList()
+            }
         }
     }
 
@@ -58,9 +68,8 @@ class ForumPageViewModel : ViewModel() {
             var downvoteCount = 0
 
             post.comments.forEach { comment ->
-                comment.commentVotes.forEach { commentVote ->
-                    val vote = postRepo.getVote(commentVote.voteId)
-                    when (vote?.voteType) {
+                comment.commentVotes.forEach { vote ->
+                    when (vote.voteType) {
                         "upvote" -> upvoteCount++
                         "downvote" -> downvoteCount++
                     }
@@ -74,30 +83,40 @@ class ForumPageViewModel : ViewModel() {
 
     fun upvote(postId: Int) {
         viewModelScope.launch {
-            // Find first comment in post and add upvote to it
-            val post = postRepo.getPost(postId)
-            post?.comments?.firstOrNull()?.let { comment ->
-                postRepo.addUpvoteToComment(comment.id)
-                loadData() // Reload to get updated data
+            try {
+                // Find post and add upvote to first comment
+                val post = _posts.value.find { it.id == postId }
+                post?.comments?.firstOrNull()?.let { comment ->
+                    container.voteRepository.addUpvote(comment.id, currentUserId)
+                    loadData()
+                }
+            } catch (e: Exception) {
+                // Handle error
             }
         }
     }
 
     fun downvote(postId: Int) {
         viewModelScope.launch {
-            val post = postRepo.getPost(postId)
-            post?.comments?.firstOrNull()?.let { comment ->
-                postRepo.addDownvoteToComment(comment.id)
-                loadData()
+            try {
+                val post = _posts.value.find { it.id == postId }
+                post?.comments?.firstOrNull()?.let { comment ->
+                    container.voteRepository.addDownvote(comment.id, currentUserId)
+                    loadData()
+                }
+            } catch (e: Exception) {
+                // Handle error
             }
         }
     }
 
     fun registerToEvent(eventId: Int) {
         viewModelScope.launch {
-            val success = eventRepo.register(eventId, currentUserId)
-            if (success) {
-                _events.value = eventRepo.getAllEvents()
+            try {
+                // TODO: Implement event registration through backend
+                loadData()
+            } catch (e: Exception) {
+                // Handle error
             }
         }
     }
@@ -125,68 +144,75 @@ class ForumPageViewModel : ViewModel() {
         viewModelScope.launch {
             val post = _posts.value.find { it.id == postId }
             _selectedPost.value = post
-            // Load replies (mock data untuk sekarang)
-            _selectedPostReplies.value = emptyList()
+            // Load replies dari comments yang ada di post
+            _selectedPostReplies.value = post?.comments ?: emptyList()
         }
     }
 
     fun upvotePost(postId: Int) {
         viewModelScope.launch {
-            // Implementasi upvote untuk post
-            val post = postRepo.getPost(postId)
-            post?.comments?.firstOrNull()?.let { comment ->
-                postRepo.addUpvoteToComment(comment.id)
-                // Reload selected post
-                selectPost(postId)
-                loadData()
+            try {
+                val post = _posts.value.find { it.id == postId }
+                post?.comments?.firstOrNull()?.let { comment ->
+                    container.voteRepository.addUpvote(comment.id, currentUserId)
+                    selectPost(postId)
+                    loadData()
+                }
+            } catch (e: Exception) {
+                // Handle error
             }
         }
     }
 
     fun downvotePost(postId: Int) {
         viewModelScope.launch {
-            // Implementasi downvote untuk post
-            val post = postRepo.getPost(postId)
-            post?.comments?.firstOrNull()?.let { comment ->
-                postRepo.addDownvoteToComment(comment.id)
-                // Reload selected post
-                selectPost(postId)
+            try {
+                val post = _posts.value.find { it.id == postId }
+                post?.comments?.firstOrNull()?.let { comment ->
+                    container.voteRepository.addDownvote(comment.id, currentUserId)
+                    selectPost(postId)
+                    loadData()
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun upvoteReply(commentId: Int) {
+        viewModelScope.launch {
+            try {
+                container.voteRepository.addUpvote(commentId, currentUserId)
+                _selectedPost.value?.let { selectPost(it.id) }
                 loadData()
+            } catch (e: Exception) {
+                // Handle error
             }
         }
     }
 
-    fun upvoteReply(replyId: Int) {
+    fun downvoteReply(commentId: Int) {
         viewModelScope.launch {
-            // Implementasi upvote untuk reply
-            val reply = postRepo.getPost(replyId)
-            reply?.comments?.firstOrNull()?.let { comment ->
-                postRepo.addUpvoteToComment(comment.id)
-                // Reload replies
+            try {
+                container.voteRepository.addDownvote(commentId, currentUserId)
                 _selectedPost.value?.let { selectPost(it.id) }
-            }
-        }
-    }
-
-    fun downvoteReply(replyId: Int) {
-        viewModelScope.launch {
-            // Implementasi downvote untuk reply
-            val reply = postRepo.getPost(replyId)
-            reply?.comments?.firstOrNull()?.let { comment ->
-                postRepo.addDownvoteToComment(comment.id)
-                // Reload replies
-                _selectedPost.value?.let { selectPost(it.id) }
+                loadData()
+            } catch (e: Exception) {
+                // Handle error
             }
         }
     }
 
     fun sendReply(content: String) {
         viewModelScope.launch {
-            // Implementasi send reply
-            _selectedPost.value?.let { post ->
-                // TODO: Create new reply post and add to selectedPostReplies
-                // For now, just reload
-                selectPost(post.id)
+            try {
+                _selectedPost.value?.let { post ->
+                    container.commentRepository.createComment(post.id, currentUserId, content)
+                    loadData()
+                    selectPost(post.id)
+                }
+            } catch (e: Exception) {
+                // Handle error
             }
         }
     }

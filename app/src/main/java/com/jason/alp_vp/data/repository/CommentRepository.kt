@@ -94,7 +94,7 @@ class CommentRepository(private val service: CommentService) {
             postId = item.postId,
             content = item.content,
             createdAt = try { java.time.Instant.parse(item.createdAt) } catch (_: Exception) { java.time.Instant.now() },
-            commentVotes = item.votes.map { v -> CommentVote(commentId = item.id, voteId = v.id) }
+            commentVotes = item.votes.map { v -> CommentVote(commentId = item.id, voteId = v.id, voteType = v.voteType) }
         )
     }
 }

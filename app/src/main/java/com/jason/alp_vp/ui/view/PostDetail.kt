@@ -31,16 +31,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jason.alp_vp.ui.model.Post
-import com.jason.alp_vp.ui.viewmodel.ForumPageViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
+import com.jason.alp_vp.ui.model.Comment
+import com.jason.alp_vp.ui.model.CommentVote
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun PostDetail(
     post: Post,
-    authorName: String = "John Developer",
-    authorInitial: String = authorName.firstOrNull()?.uppercaseChar()?.toString() ?: "J",
-    replies: List<Post> = emptyList(),
+    replies: List<Comment> = emptyList(),
     onUpvotePost: (Int) -> Unit = {},
     onDownvotePost: (Int) -> Unit = {},
     onUpvoteReply: (Int) -> Unit = {},
@@ -48,6 +46,33 @@ fun PostDetail(
     onSendReply: (String) -> Unit = {}
 ) {
     var replyText by remember { mutableStateOf("") }
+
+    // Get author info from post
+    val authorName = post.authorName.ifEmpty { "User${post.userId}" }
+    val authorInitial = authorName.firstOrNull()?.uppercaseChar()?.toString() ?: "U"
+
+    // Calculate time ago
+    val now = java.time.Instant.now()
+    val duration = java.time.Duration.between(post.createdAt, now)
+    val timeAgo = when {
+        duration.toMinutes() < 1 -> "just now"
+        duration.toMinutes() < 60 -> "${duration.toMinutes()}m ago"
+        duration.toHours() < 24 -> "${duration.toHours()}h ago"
+        duration.toDays() < 7 -> "${duration.toDays()}d ago"
+        else -> "${duration.toDays() / 7}w ago"
+    }
+
+    // Calculate votes from comments
+    var upvotes = 0
+    var downvotes = 0
+    post.comments.forEach { comment ->
+        comment.commentVotes.forEach { vote ->
+            when (vote.voteType) {
+                "upvote" -> upvotes++
+                "downvote" -> downvotes++
+            }
+        }
+    }
 
     Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0F1115)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -58,11 +83,6 @@ fun PostDetail(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
-                    // Hitung votes dari comments
-                    val upvotes = 0
-                    val downvotes = 0
-                    // TODO: Implement vote counting from post.comments
-
                     Card(
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF14161A)),
                         shape = RoundedCornerShape(12.dp),
@@ -89,7 +109,7 @@ fun PostDetail(
                                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                         Text(authorName, color = Color.White, fontSize = 16.sp)
                                         Spacer(modifier = Modifier.weight(1f))
-                                        Text(text = "2h ago", color = Color(0xFF98A0B3), fontSize = 12.sp)
+                                        Text(text = timeAgo, color = Color(0xFF98A0B3), fontSize = 12.sp)
                                     }
 
                                     Spacer(modifier = Modifier.height(8.dp))
@@ -154,13 +174,12 @@ fun PostDetail(
                     )
                 }
 
-                items(replies) { reply ->
+                items(replies) { comment ->
                     ReplyItem(
-                        reply = reply,
-                        authorInitial = reply.content.firstOrNull()?.uppercaseChar()?.toString() ?: "S",
-                        authorName = "User",
-                        onUpvote = { onUpvoteReply(reply.id) },
-                        onDownvote = { onDownvoteReply(reply.id) }
+                        comment = comment,
+                        authorName = "User${comment.id}",
+                        onUpvote = onUpvoteReply,
+                        onDownvote = onDownvoteReply
                     )
                 }
 
@@ -214,27 +233,12 @@ fun PostDetail(
     }
 }
 
-@Composable
-fun PostDetailScreen(viewModel: ForumPageViewModel = viewModel()) {
-    val post = viewModel.selectedPost.collectAsState().value ?: return
-    val replies = viewModel.selectedPostReplies.collectAsState().value
 
-    PostDetail(
-        post = post,
-        replies = replies,
-        onUpvotePost = { viewModel.upvotePost(it) },
-        onDownvotePost = { viewModel.downvotePost(it) },
-        onUpvoteReply = { viewModel.upvoteReply(it) },
-        onDownvoteReply = { viewModel.downvoteReply(it) },
-        onSendReply = { viewModel.sendReply(it) }
-    )
-}
-
-@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Preview(showBackground = true)
 @Composable
 fun PostDetailPreview() {
     val now = java.time.Instant.now()
-    val post = com.jason.alp_vp.ui.model.Post(
+    val post = Post(
         id = 1,
         userId = 2,
         content = "Just completed my first bounty! The XP system is so motivating. Anyone else working on the e-commerce project? I found some great libraries for payment integration that really speed up development.",
@@ -243,22 +247,25 @@ fun PostDetailPreview() {
         comments = emptyList()
     )
 
-    val r1 = com.jason.alp_vp.ui.model.Post(
+    val r1 = Comment(
         id = 2,
-        userId = 3,
+        postId = 1,
         content = "Great job! I'm also working on something similar. Which payment library did you use?",
-        image = null,
         createdAt = now.minusSeconds(3_600_000),
-        comments = emptyList()
+        commentVotes = listOf(
+            CommentVote(commentId = 2, voteId = 1, voteType = "upvote"),
+            CommentVote(commentId = 2, voteId = 2, voteType = "upvote")
+        )
     )
 
-    val r2 = com.jason.alp_vp.ui.model.Post(
+    val r2 = Comment(
         id = 3,
-        userId = 4,
+        postId = 1,
         content = "Congrats on your first bounty! The XP system really is addictive 😄",
-        image = null,
         createdAt = now.minusSeconds(2_700_000),
-        comments = emptyList()
+        commentVotes = listOf(
+            CommentVote(commentId = 3, voteId = 3, voteType = "upvote")
+        )
     )
 
     PostDetail(post = post, replies = listOf(r1, r2))

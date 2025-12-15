@@ -43,4 +43,13 @@ class AppContainer {
     val voteService: VoteService by lazy {
         retrofit.create(VoteService::class.java)
     }
+
+    // Repository instances
+    val commentRepository: com.jason.alp_vp.data.repository.CommentRepository by lazy {
+        com.jason.alp_vp.data.repository.CommentRepository(commentService)
+    }
+
+    val voteRepository: com.jason.alp_vp.data.repository.VoteRepository by lazy {
+        com.jason.alp_vp.data.repository.VoteRepository(voteService)
+    }
 }

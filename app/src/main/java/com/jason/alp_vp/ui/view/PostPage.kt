@@ -22,7 +22,8 @@ private val TitleColor = Color(0xFFFFFFFF)
 @Composable
 fun PostPage(
     viewModel: ForumPageViewModel = viewModel(),
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onNavigateToPostDetail: (Int) -> Unit = {}
 ) {
     val postUis by viewModel.postUis.collectAsState()
 
@@ -60,7 +61,8 @@ fun PostPage(
                         upvoteCount = postUi.upvoteCount,
                         downvoteCount = postUi.downvoteCount,
                         onUpvote = { viewModel.upvote(postUi.post.id) },
-                        onDownvote = { viewModel.downvote(postUi.post.id) }
+                        onDownvote = { viewModel.downvote(postUi.post.id) },
+                        onClick = { onNavigateToPostDetail(postUi.post.id) }
                     )
                 }
                 item {
