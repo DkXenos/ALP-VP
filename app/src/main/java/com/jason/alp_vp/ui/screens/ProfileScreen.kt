@@ -483,16 +483,6 @@ private fun ProfileHeader(
         }
     }
 }
-            Text(
-                text = role,
-                color = if (role == "COMPANY") AccentBlue else AccentGreen,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-            )
-        }
-    }
-}
 
 @Composable
 private fun StatsCard(stats: ProfileStats) {

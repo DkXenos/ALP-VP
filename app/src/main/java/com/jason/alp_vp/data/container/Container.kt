@@ -106,5 +106,15 @@ class AppContainer {
     val companyService: CompanyService by lazy {
         retrofit.create(CompanyService::class.java)
     }
+
+    // ===== Repositories (Lazy Initialization) =====
+
+    val voteRepository: com.jason.alp_vp.data.repository.VoteRepository by lazy {
+        com.jason.alp_vp.data.repository.VoteRepository(voteService)
+    }
+
+    val commentRepository: com.jason.alp_vp.data.repository.CommentRepository by lazy {
+        com.jason.alp_vp.data.repository.CommentRepository(commentService)
+    }
 }
 
