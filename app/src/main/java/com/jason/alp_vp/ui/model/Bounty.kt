@@ -7,5 +7,5 @@ data class Bounty(
     val deadline: String,
     val rewardXp: Int,
     val rewardMoney: Int,
-    val status: String,
+    val status: String
 )

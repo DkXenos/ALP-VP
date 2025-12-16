@@ -1,18 +1,14 @@
 package com.jason.alp_vp.ui.model
 
-/**
- * Minimal models for Post and Vote. Keep calculations (counts) in ViewModel as requested.
- */
-
-data class Vote(
-    val id: String,
-    val voteType: String, // "upvote" or "downvote"
-    val createdAt: Long
-)
+import java.time.Instant
 
 data class Post(
-    val id: String,
+    val id: Int,
+    val userId: Int,
+    val authorName: String = "",
+    val authorEmail: String = "",
     val content: String,
-    val createdAt: Long,
-    val votes: List<Vote> = emptyList()
+    val image: String? = null,
+    val createdAt: Instant = Instant.now(),
+    val comments: List<Comment> = emptyList()
 )
