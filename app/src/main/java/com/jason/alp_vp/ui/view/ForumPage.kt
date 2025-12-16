@@ -41,18 +41,141 @@ private val SubText = Color(0xFF98A0B3)
 @Composable
 fun ForumPage(
     viewModel: ForumPageViewModel = viewModel(),
+    bountyViewModel: com.jason.alp_vp.ui.viewmodel.BountyViewModel = viewModel(),
     onNavigateToEventPage: () -> Unit = {},
     onNavigateToPostPage: () -> Unit = {},
     onNavigateToPostDetail: (Int) -> Unit = {}
 ) {
     val events by viewModel.events.collectAsState()
     val postUis by viewModel.postUis.collectAsState()
+    val bounties by bountyViewModel.bounties.collectAsState()
+    val isLoadingBounties by bountyViewModel.isLoading.collectAsState()
+    val bountyError by bountyViewModel.error.collectAsState()
 
     Surface(color = Background, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Bounties Section Header
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Available Bounties",
+                        color = TitleColor,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TextButton(onClick = { /* TODO: Navigate to all bounties */ }) {
+                        Text(
+                            text = "View All",
+                            color = AccentBlue,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            // Show bounties or loading/error state
+            if (isLoadingBounties) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(CardBackground),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            androidx.compose.material3.CircularProgressIndicator(color = AccentBlue)
+                        }
+                    }
+                }
+            } else if (bountyError != null) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(CardBackground),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "⚠️ Failed to load bounties",
+                                color = Color(0xFFF85C5C),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = bountyError ?: "Unknown error",
+                                color = SubText,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(
+                                onClick = { bountyViewModel.loadAllBounties() },
+                                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                            ) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                }
+            } else if (bounties.isEmpty()) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(CardBackground),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(text = "🎯", fontSize = 40.sp)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "No bounties available",
+                                color = SubText,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Show first 3 bounties
+                items(bounties.take(3)) { bounty ->
+                    BountyCardItem(
+                        bounty = bounty,
+                        onClaimClick = { bountyViewModel.claimBounty(bounty.id) }
+                    )
+                }
+            }
+
             item {
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -138,6 +261,109 @@ fun ForumPage(
 
             item {
                 Spacer(modifier = Modifier.height(40.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun BountyCardItem(
+    bounty: com.jason.alp_vp.ui.model.Bounty,
+    onClaimClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        colors = CardDefaults.cardColors(CardBackground),
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = bounty.title,
+                        color = TitleColor,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = bounty.company,
+                        color = SubText,
+                        fontSize = 14.sp
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = when (bounty.status.lowercase()) {
+                        "active" -> Color(0xFF2F6BFF).copy(alpha = 0.15f)
+                        "claimed" -> Color(0xFFFFA500).copy(alpha = 0.15f)
+                        "completed" -> Color(0xFF55D07E).copy(alpha = 0.15f)
+                        else -> Color(0xFF666666).copy(alpha = 0.15f)
+                    }
+                ) {
+                    Text(
+                        text = bounty.status.uppercase(),
+                        color = when (bounty.status.lowercase()) {
+                            "active" -> Color(0xFF2F6BFF)
+                            "claimed" -> Color(0xFFFFA500)
+                            "completed" -> Color(0xFF55D07E)
+                            else -> Color(0xFF666666)
+                        },
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (bounty.rewardMoney > 0) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "💰", fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Rp ${java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID")).format(bounty.rewardMoney)}",
+                            color = RegisterGreen,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                if (bounty.status.lowercase() == "active") {
+                    Button(
+                        onClick = onClaimClick,
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Claim", fontSize = 14.sp)
+                    }
+                }
+            }
+
+            if (bounty.deadline.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "⏰ Deadline: ${bounty.deadline.take(10)}",
+                    color = SubText,
+                    fontSize = 12.sp
+                )
             }
         }
     }

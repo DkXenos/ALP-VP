@@ -10,10 +10,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.jason.alp_vp.ui.route.AppRoute
 import com.jason.alp_vp.ui.theme.ALPVPTheme
+import com.jason.alp_vp.utils.TokenManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize TokenManager
+        TokenManager.init(this)
+
         setContent {
             ALPVPTheme {
                 AppRoute()

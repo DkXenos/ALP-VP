@@ -24,6 +24,8 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import com.jason.alp_vp.ui.screens.LoginScreen
+import com.jason.alp_vp.ui.screens.RegisterScreen
 import com.jason.alp_vp.ui.view.*
 import com.jason.alp_vp.ui.viewmodel.ForumPageViewModel
 
@@ -37,6 +39,8 @@ enum class AppView(
     val selectedIcon: ImageVector? = null,
     val unselectedIcon: ImageVector? = null
 ) {
+    Login("Login"),
+    Register("Register"),
     Forum("Forum", Icons.Filled.Home, Icons.Outlined.Home),
     Posts("Posts", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
     PostDetail("PostDetail"),
@@ -53,15 +57,28 @@ fun AppRoute() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val authViewModel: com.jason.alp_vp.viewmodel.AuthViewModel = viewModel()
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
+
+    // Check login status on start
+    LaunchedEffect(Unit) {
+        authViewModel.checkLoginStatus()
+    }
+
     // Pages that should show the bottom bar
     val rootPages = listOf(AppView.Forum.name, AppView.Posts.name, AppView.Events.name)
 
+    // Auth pages (no top/bottom bar)
+    val authPages = listOf(AppView.Login.name, AppView.Register.name)
+
     // Determine if we can navigate back (not on root pages)
-    val canNavigateBack = currentRoute !in rootPages && navController.previousBackStackEntry != null
+    val canNavigateBack = currentRoute !in rootPages &&
+                         currentRoute !in authPages &&
+                         navController.previousBackStackEntry != null
 
     Scaffold(
         topBar = {
-            val noHeaderPages = listOf(AppView.PostDetail.name)
+            val noHeaderPages = listOf(AppView.PostDetail.name) + authPages
             val currentBaseRoute = currentRoute?.split("/")?.first()
             if (currentBaseRoute != null && currentBaseRoute !in noHeaderPages) {
                 val displayView = AppView.entries.find { it.name == currentBaseRoute } ?: AppView.Forum
@@ -81,9 +98,24 @@ fun AppRoute() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = AppView.Forum.name,
+            startDestination = if (isLoggedIn) AppView.Forum.name else AppView.Login.name,
             modifier = Modifier.padding(innerPadding)
         ) {
+            // Auth Routes
+            composable(AppView.Login.name) {
+                LoginScreen(
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
+            }
+
+            composable(AppView.Register.name) {
+                RegisterScreen(
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
+            }
+
             composable(AppView.Forum.name) {
                 ForumPage(
                     onNavigateToEventPage = { navController.navigate(AppView.Events.name) },
