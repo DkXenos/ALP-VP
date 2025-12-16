@@ -78,7 +78,7 @@ data class EventItem(
 data class ProfileBountyItem(
     val id: String,
     val title: String,
-    val company: String,
+    val company: CompanyInfo?,  // Changed from String to CompanyInfo object
     val deadline: String,
     val rewardXp: Int,
     val rewardMoney: Int,
@@ -86,6 +86,13 @@ data class ProfileBountyItem(
     val assignedAt: String?,
     val isCompleted: Boolean,
     val completedAt: String?
+)
+
+data class CompanyInfo(
+    val id: Int,
+    val name: String,
+    val email: String? = null,
+    val description: String? = null
 )
 
 data class ProfileStatsResponse(
