@@ -31,12 +31,16 @@ class AuthViewModel : ViewModel() {
         checkLoginStatus()
     }
 
-    fun login(email: String, password: String) {
+    fun login(email: String, password: String, isCompany: Boolean = false) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             try {
-                val response = api.login(LoginRequest(email = email, password = password))
+                val response = if (isCompany) {
+                    api.companyLogin(LoginRequest(email = email, password = password))
+                } else {
+                    api.login(LoginRequest(email = email, password = password))
+                }
                 _authResponse.value = response
 
                 // Save token and user data

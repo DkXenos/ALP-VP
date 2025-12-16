@@ -13,4 +13,7 @@ interface AuthApi {
 
     @POST("login")
     suspend fun login(@Body request: LoginRequest): AuthResponse
+
+    @POST("companies/login")
+    suspend fun companyLogin(@Body request: LoginRequest): AuthResponse
 }
