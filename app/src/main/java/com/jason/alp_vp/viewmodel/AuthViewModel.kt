@@ -89,12 +89,24 @@ class AuthViewModel : ViewModel() {
     }
 
     fun logout() {
-        TokenManager.clearToken()
+        try {
+            TokenManager.clearToken()
+        } catch (e: Exception) {
+            // Ignore errors during logout
+        }
         _isLoggedIn.value = false
         _authResponse.value = null
     }
 
     fun checkLoginStatus() {
-        _isLoggedIn.value = TokenManager.isLoggedIn()
+        try {
+            _isLoggedIn.value = TokenManager.isLoggedIn()
+        } catch (e: UninitializedPropertyAccessException) {
+            // TokenManager not initialized yet, default to false
+            _isLoggedIn.value = false
+        } catch (e: Exception) {
+            // Any other error, default to false
+            _isLoggedIn.value = false
+        }
     }
 }

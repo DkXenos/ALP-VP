@@ -40,16 +40,21 @@ data class BountiesResponse(
 )
 
 data class BountyItem(
-    val id: Int,
+    val id: String,  // ✅ Changed from Int to String (UUID)
     val title: String,
     val description: String?,
-    val reward: Double,
+    val company: String?,  // Added company field
+    val rewardXp: Int?,  // Changed from reward to rewardXp
+    val rewardMoney: Int?,  // Added rewardMoney
     val status: String,
     val deadline: String?,
-    val companyId: Int,
+    val companyId: String?,  // Changed from Int to String
     val companyName: String?,
     val createdAt: String?,
-    val claimedBy: Int?
+    val claimedBy: String?,  // Changed from Int to String
+    val assignedAt: String?,  // Added for AssignedBounty
+    val isCompleted: Boolean?,  // Added for AssignedBounty
+    val completedAt: String?  // Added for AssignedBounty
 )
 
 data class BountyDetailResponse(
@@ -76,12 +81,12 @@ data class MyBountiesResponse(
 // Extension function to convert API response to UI model
 fun BountyItem.toUiModel(): Bounty {
     return Bounty(
-        id = this.id.toString(),
+        id = this.id,  // ✅ No need to convert - already String
         title = this.title,
-        company = this.companyName ?: "Unknown Company",
+        company = this.company ?: this.companyName ?: "Unknown Company",
         deadline = this.deadline ?: "",
-        rewardXp = 0, // You can calculate or get from backend
-        rewardMoney = this.reward.toInt(),
+        rewardXp = this.rewardXp ?: 0,
+        rewardMoney = this.rewardMoney ?: 0,
         status = this.status
     )
 }
