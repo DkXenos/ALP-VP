@@ -208,7 +208,7 @@ fun ProfileScreen(
                 // Profile Header
                 item {
                     ProfileHeader(
-                        username = profileData?.username ?: "User",
+                        username = profileData?.getDisplayName() ?: "User",
                         email = profileData?.email ?: "",
                         role = profileData?.role ?: "TALENT"
                     )

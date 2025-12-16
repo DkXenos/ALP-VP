@@ -38,13 +38,17 @@ data class ProfileResponse(
 
 data class ProfileData(
     val id: Int,
-    val username: String,
+    val username: String? = null,  // For users (TALENT)
+    val name: String? = null,       // For companies (COMPANY)
     val email: String,
     val role: String,
     val posts: List<PostItem>,
     val events: List<EventItem>,
     val bounties: List<ProfileBountyItem>
-)
+) {
+    // Helper to get display name (username for users, name for companies)
+    fun getDisplayName(): String = username ?: name ?: email.substringBefore("@")
+}
 
 data class PostItem(
     val id: Int,
