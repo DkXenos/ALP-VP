@@ -36,6 +36,7 @@ private val SubText = Color(0xFF98A0B3)
 fun BountyDetailScreen(
     bountyId: String,
     onNavigateBack: () -> Unit,
+    onBountyClaimed: () -> Unit = {},
     viewModel: BountyDetailViewModel = viewModel()
 ) {
     val bountyDetail by viewModel.bountyDetail.collectAsState()
@@ -53,6 +54,8 @@ fun BountyDetailScreen(
         if (claimSuccess) {
             showClaimDialog = false
             viewModel.resetClaimSuccess()
+            // Notify parent that bounty was claimed
+            onBountyClaimed()
         }
     }
 

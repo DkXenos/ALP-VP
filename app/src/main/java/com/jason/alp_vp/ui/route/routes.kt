@@ -123,7 +123,17 @@ fun AppRoute() {
             }
 
             composable(AppView.Forum.name) {
+                val bountyViewModel: com.jason.alp_vp.ui.viewmodel.BountyViewModel = viewModel()
+
+                // Refresh bounties when navigating to this screen
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute == AppView.Forum.name) {
+                        bountyViewModel.loadAllBounties()
+                    }
+                }
+
                 HomePage(
+                    bountyViewModel = bountyViewModel,
                     onNavigateToBountyDetail = { bountyId ->
                         navController.navigate("bounty_detail/$bountyId")
                     }
@@ -174,8 +184,18 @@ fun AppRoute() {
             }
 
             composable(AppView.Profile.name) {
+                val profileViewModel: com.jason.alp_vp.ui.viewmodel.ProfileViewModel = viewModel()
+
+                // Refresh profile when navigating to this screen
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute == AppView.Profile.name) {
+                        profileViewModel.refresh()
+                    }
+                }
+
                 ProfileScreen(
                     authViewModel = authViewModel,
+                    profileViewModel = profileViewModel,
                     onNavigateToLogin = {
                         navController.navigate(AppView.Login.name) {
                             popUpTo(0) { inclusive = true }
@@ -206,9 +226,18 @@ fun AppRoute() {
             // Bounty Detail Route
             composable("bounty_detail/{bountyId}") { backStackEntry ->
                 val bountyId = backStackEntry.arguments?.getString("bountyId") ?: ""
+                val bountyViewModel: com.jason.alp_vp.ui.viewmodel.BountyViewModel = viewModel()
+                val profileViewModel: com.jason.alp_vp.ui.viewmodel.ProfileViewModel = viewModel()
+
                 com.jason.alp_vp.ui.screens.BountyDetailScreen(
                     bountyId = bountyId,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onBountyClaimed = {
+                        // Refresh bounties and profile data after claiming
+                        bountyViewModel.loadAllBounties()
+                        bountyViewModel.loadMyBounties()
+                        profileViewModel.refresh()
+                    }
                 )
             }
 

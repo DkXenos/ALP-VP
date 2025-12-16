@@ -31,8 +31,14 @@ fun HomePage(
     onNavigateToBountyDetail: (String) -> Unit = {}
 ) {
     val bounties by bountyViewModel.bounties.collectAsState()
+    val myBounties by bountyViewModel.myBounties.collectAsState()
     val isLoadingBounties by bountyViewModel.isLoading.collectAsState()
     val bountyError by bountyViewModel.error.collectAsState()
+
+    // Load my bounties when screen loads
+    LaunchedEffect(Unit) {
+        bountyViewModel.loadMyBounties()
+    }
 
     Surface(color = Background, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -41,6 +47,50 @@ fun HomePage(
         ) {
             item {
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // My Bounties Section (if user has claimed bounties)
+            if (myBounties.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "My Active Bounties",
+                            color = TitleColor,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFFFA500).copy(alpha = 0.2f)
+                        ) {
+                            Text(
+                                text = myBounties.size.toString(),
+                                color = Color(0xFFFFA500),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                items(myBounties) { bounty ->
+                    BountyCardItem(
+                        bounty = bounty,
+                        isClaimed = true,
+                        onClick = { onNavigateToBountyDetail(bounty.id) }
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
 
             // Bounties Section Header
@@ -153,6 +203,7 @@ fun HomePage(
                 items(bounties) { bounty ->
                     BountyCardItem(
                         bounty = bounty,
+                        isClaimed = myBounties.any { it.id == bounty.id },
                         onClick = { onNavigateToBountyDetail(bounty.id) }
                     )
                 }
@@ -168,10 +219,13 @@ fun HomePage(
 @Composable
 private fun BountyCardItem(
     bounty: com.jason.alp_vp.ui.model.Bounty,
+    isClaimed: Boolean = false,
     onClick: () -> Unit = {}
 ) {
     Card(
-        colors = CardDefaults.cardColors(CardBackground),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isClaimed) CardBackground.copy(alpha = 0.9f) else CardBackground
+        ),
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -185,14 +239,31 @@ private fun BountyCardItem(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = bounty.title,
-                        color = TitleColor,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = bounty.title,
+                            color = TitleColor,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (isClaimed) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = Color(0xFFFFA500).copy(alpha = 0.2f)
+                            ) {
+                                Text(
+                                    text = "CLAIMED",
+                                    color = Color(0xFFFFA500),
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = bounty.company,
