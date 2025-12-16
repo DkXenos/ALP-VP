@@ -38,7 +38,7 @@ interface EventService {
     @POST("/events/register")
     suspend fun registerToEvent(
         @Body registration: EventRegistrationRequest
-    ): Response<RegisteredUser>
+    ): Response<EventResponse>
 
     @DELETE("/events/{eventId}/users/{userId}")
     suspend fun unregisterFromEvent(

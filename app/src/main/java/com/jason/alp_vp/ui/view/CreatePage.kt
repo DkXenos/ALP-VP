@@ -57,94 +57,93 @@ fun CreatePage(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-            // Wallet Balance Card
-            WalletBalanceDisplay(balance = walletBalance)
+        // Wallet Balance Card
+        WalletBalanceDisplay(balance = walletBalance)
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Type Selector (Radio Buttons)
-            TypeSelectorCard(
-                selectedType = selectedType,
-                onTypeSelected = { viewModel.selectType(it) }
+        // Type Selector (Radio Buttons)
+        TypeSelectorCard(
+            selectedType = selectedType,
+            onTypeSelected = { viewModel.selectType(it) }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Dynamic Form based on selected type
+        when (selectedType) {
+            CreateType.BOUNTY -> BountyForm(
+                formData = bountyForm,
+                onTitleChange = { viewModel.updateBountyForm(title = it) },
+                onDeadlineChange = { viewModel.updateBountyForm(deadline = it) },
+                onRewardXpChange = { viewModel.updateBountyForm(rewardXp = it) },
+                onRewardMoneyChange = { viewModel.updateBountyForm(rewardMoney = it) },
+                onDescriptionChange = { viewModel.updateBountyForm(description = it) }
             )
+            CreateType.EVENT -> EventForm(
+                formData = eventForm,
+                onTitleChange = { viewModel.updateEventForm(title = it) },
+                onDescriptionChange = { viewModel.updateEventForm(description = it) },
+                onEventDateChange = { viewModel.updateEventForm(eventDate = it) },
+                onQuotaChange = { viewModel.updateEventForm(registeredQuota = it) }
+            )
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Dynamic Form based on selected type
-            when (selectedType) {
-                CreateType.BOUNTY -> BountyForm(
-                    formData = bountyForm,
-                    onTitleChange = { viewModel.updateBountyForm(title = it) },
-                    onDeadlineChange = { viewModel.updateBountyForm(deadline = it) },
-                    onRewardXpChange = { viewModel.updateBountyForm(rewardXp = it) },
-                    onRewardMoneyChange = { viewModel.updateBountyForm(rewardMoney = it) },
-                    onDescriptionChange = { viewModel.updateBountyForm(description = it) }
-                )
-                CreateType.EVENT -> EventForm(
-                    formData = eventForm,
-                    onTitleChange = { viewModel.updateEventForm(title = it) },
-                    onDescriptionChange = { viewModel.updateEventForm(description = it) },
-                    onEventDateChange = { viewModel.updateEventForm(eventDate = it) },
-                    onQuotaChange = { viewModel.updateEventForm(registeredQuota = it) }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Error Message
-            errorMessage?.let { error ->
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFF85C5C).copy(alpha = 0.2f)
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    Text(
-                        text = error,
-                        color = Color(0xFFF85C5C),
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // Create Button
-            Button(
-                onClick = {
-                    when (selectedType) {
-                        CreateType.BOUNTY -> viewModel.createBounty()
-                        CreateType.EVENT -> viewModel.createEvent()
-                    }
-                },
-                enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2B62FF)
+        // Error Message
+        errorMessage?.let { error ->
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF85C5C).copy(alpha = 0.2f)
                 ),
-                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .height(56.dp)
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                } else {
-                    Text(
-                        text = "CREATE ${if (selectedType == CreateType.BOUNTY) "BOUNTY" else "EVENT"}",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = error,
+                    color = Color(0xFFF85C5C),
+                    modifier = Modifier.padding(16.dp)
+                )
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
+
+        // Create Button
+        Button(
+            onClick = {
+                when (selectedType) {
+                    CreateType.BOUNTY -> viewModel.createBounty()
+                    CreateType.EVENT -> viewModel.createEvent()
+                }
+            },
+            enabled = !isLoading,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF2B62FF)
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(56.dp)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Text(
+                    text = "CREATE ${if (selectedType == CreateType.BOUNTY) "BOUNTY" else "EVENT"}",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 

@@ -12,11 +12,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jason.alp_vp.ui.model.Bounty
 
 @Composable
 fun ExpiredBountiesSection(
-    expiredBounties: List<`Bounty.kt`>,
-    onBountyClick: (`Bounty.kt`) -> Unit,
+    expiredBounties: List<Bounty>,
+    onBountyClick: (Bounty) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(

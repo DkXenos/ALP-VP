@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jason.alp_vp.ui.model.Bounty
 import java.text.NumberFormat
 import java.time.Duration
 import java.time.Instant
@@ -20,8 +21,8 @@ import java.util.Locale
 
 @Composable
 fun ActiveBountiesSection(
-    activeBounties: List<`Bounty.kt`>,
-    onBountyClick: (`Bounty.kt`) -> Unit,
+    activeBounties: List<Bounty>,
+    onBountyClick: (Bounty) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -66,7 +67,7 @@ fun ActiveBountiesSection(
 
 @Composable
 fun BountyCard(
-    bounty: `Bounty.kt`,
+    bounty: Bounty,
     onClick: () -> Unit,
     isExpired: Boolean = false,
     modifier: Modifier = Modifier
@@ -92,10 +93,10 @@ fun BountyCard(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = bounty.description,
+                        text = bounty.company,
                         color = if (isExpired) Color(0xFF666666) else Color(0xFF98A0B3),
                         fontSize = 14.sp,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -109,19 +110,25 @@ fun BountyCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                if (bounty.reward > 0) {
+                if (bounty.rewardMoney > 0) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "💰")
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Rp ${NumberFormat.getNumberInstance(Locale.forLanguageTag("id-ID")).format(bounty.reward)}", color = Color(0xFF57D06A), fontWeight = FontWeight.Bold)
+                        Text(text = "Rp ${NumberFormat.getNumberInstance(Locale.forLanguageTag("id-ID")).format(bounty.rewardMoney)}", color = Color(0xFF57D06A), fontWeight = FontWeight.Bold)
                     }
                 }
 
-                bounty.deadline?.let { dl ->
+                val deadlineInstant = try {
+                    Instant.parse(bounty.deadline)
+                } catch (e: Exception) {
+                    null
+                }
+
+                deadlineInstant?.let { dl ->
                     val hoursLeft = Duration.between(Instant.now(), dl).toHours()
                     if (hoursLeft > 0) {
                         Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFF2B62FF).copy(alpha = 0.12f)) {
-                            Text(text = "${if (hoursLeft < 24) "${hoursLeft}h left" else "${hoursLeft/24}d left"}", color = Color(0xFF2B62FF), modifier = Modifier.padding(8.dp))
+                            Text(text = if (hoursLeft < 24) "${hoursLeft}h left" else "${hoursLeft/24}d left", color = Color(0xFF2B62FF), modifier = Modifier.padding(8.dp))
                         }
                     }
                 }

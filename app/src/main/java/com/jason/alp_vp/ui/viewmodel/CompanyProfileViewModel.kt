@@ -2,6 +2,7 @@ package com.jason.alp_vp.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jason.alp_vp.ui.model.Bounty
 import com.jason.alp_vp.ui.model.Company
 import com.jason.alp_vp.ui.model.PaymentMethod
 import com.jason.alp_vp.ui.model.WalletTransaction
@@ -20,11 +21,11 @@ class CompanyProfileViewModel : ViewModel() {
     private val _walletBalance = MutableStateFlow(0.0)
     val walletBalance: StateFlow<Double> = _walletBalance.asStateFlow()
 
-    private val _activeBounties = MutableStateFlow<List<`Bounty.kt`>>(emptyList())
-    val activeBounties: StateFlow<List<`Bounty.kt`>> = _activeBounties.asStateFlow()
+    private val _activeBounties = MutableStateFlow<List<Bounty>>(emptyList())
+    val activeBounties: StateFlow<List<Bounty>> = _activeBounties.asStateFlow()
 
-    private val _expiredBounties = MutableStateFlow<List<`Bounty.kt`>>(emptyList())
-    val expiredBounties: StateFlow<List<`Bounty.kt`>> = _expiredBounties.asStateFlow()
+    private val _expiredBounties = MutableStateFlow<List<Bounty>>(emptyList())
+    val expiredBounties: StateFlow<List<Bounty>> = _expiredBounties.asStateFlow()
 
     private val _followersCount = MutableStateFlow(0)
     val followersCount: StateFlow<Int> = _followersCount.asStateFlow()
@@ -58,10 +59,12 @@ class CompanyProfileViewModel : ViewModel() {
             try {
                 // Dummy data - replace with actual repository calls
                 val company = Company(
-                    id = "comp_1",
+                    id = 1,
                     name = "TechCorp Solutions",
+                    email = "contact@techcorp.com",
                     description = "Leading technology company specializing in innovative mobile solutions and digital transformation. We help businesses scale through cutting-edge software development and provide comprehensive digital solutions for modern enterprises. Our team of expert developers creates scalable, secure, and user-friendly applications.",
                     logo = null,
+                    createdAt = "2024-01-01T00:00:00Z",
                     walletBalance = 15250.75,
                     followersCount = 1247,
                     followingCount = 89,
@@ -69,84 +72,62 @@ class CompanyProfileViewModel : ViewModel() {
                 )
 
                 val activeBountiesData = listOf(
-                    `Bounty.kt`(
+                    Bounty(
                         id = "bounty_1",
                         title = "Mobile App UI/UX Design",
-                        description = "Create modern mobile app interface for e-commerce platform with dark theme and smooth animations",
-                        reward = 2500.0,
-                        difficulty = "Medium",
-                        minLevelRequired = 3,
-                        type = "bounty",
-                        status = "active",
-                        createdAt = Instant.now().minus(2, ChronoUnit.DAYS),
-                        deadline = Instant.now().plus(5, ChronoUnit.DAYS)
+                        company = "TechCorp Solutions",
+                        deadline = "2024-12-21T23:59:59Z",
+                        rewardXp = 250,
+                        rewardMoney = 2500,
+                        status = "active"
                     ),
-                    `Bounty.kt`(
+                    Bounty(
                         id = "bounty_2",
                         title = "Android Kotlin Development",
-                        description = "Develop native Android application with MVVM architecture and Jetpack Compose",
-                        reward = 3500.0,
-                        difficulty = "Hard",
-                        minLevelRequired = 5,
-                        type = "bounty",
-                        status = "active",
-                        createdAt = Instant.now().minus(1, ChronoUnit.DAYS),
-                        deadline = Instant.now().plus(7, ChronoUnit.DAYS)
+                        company = "TechCorp Solutions",
+                        deadline = "2024-12-23T23:59:59Z",
+                        rewardXp = 350,
+                        rewardMoney = 3500,
+                        status = "active"
                     ),
-                    `Bounty.kt`(
+                    Bounty(
                         id = "event_1",
                         title = "Tech Conference 2024",
-                        description = "Annual technology conference with industry leaders and networking opportunities",
-                        reward = 0.0,
-                        difficulty = "Easy",
-                        minLevelRequired = 1,
-                        type = "event",
-                        status = "active",
-                        createdAt = Instant.now().minus(1, ChronoUnit.DAYS),
-                        deadline = Instant.now().plus(10, ChronoUnit.DAYS),
-                        quota = 100,
-                        countdownEnd = Instant.now().plus(10, ChronoUnit.DAYS)
+                        company = "TechCorp Solutions",
+                        deadline = "2024-12-26T23:59:59Z",
+                        rewardXp = 100,
+                        rewardMoney = 0,
+                        status = "active"
                     ),
-                    `Bounty.kt`(
+                    Bounty(
                         id = "event_2",
                         title = "Mobile Dev Workshop",
-                        description = "Hands-on workshop for mobile development with React Native and Flutter",
-                        reward = 0.0,
-                        difficulty = "Medium",
-                        minLevelRequired = 2,
-                        type = "event",
-                        status = "active",
-                        createdAt = Instant.now().minus(3, ChronoUnit.DAYS),
-                        deadline = Instant.now().plus(14, ChronoUnit.DAYS),
-                        quota = 50,
-                        countdownEnd = Instant.now().plus(14, ChronoUnit.DAYS)
+                        company = "TechCorp Solutions",
+                        deadline = "2024-12-30T23:59:59Z",
+                        rewardXp = 200,
+                        rewardMoney = 0,
+                        status = "active"
                     )
                 )
 
                 val expiredBountiesData = listOf(
-                    `Bounty.kt`(
+                    Bounty(
                         id = "bounty_exp_1",
                         title = "Backend API Development",
-                        description = "REST API development for mobile application with Node.js and MongoDB",
-                        reward = 1800.0,
-                        difficulty = "Hard",
-                        minLevelRequired = 5,
-                        type = "bounty",
-                        status = "expired",
-                        createdAt = Instant.now().minus(30, ChronoUnit.DAYS),
-                        deadline = Instant.now().minus(5, ChronoUnit.DAYS)
+                        company = "TechCorp Solutions",
+                        deadline = "2024-11-11T23:59:59Z",
+                        rewardXp = 180,
+                        rewardMoney = 1800,
+                        status = "expired"
                     ),
-                    `Bounty.kt`(
+                    Bounty(
                         id = "bounty_exp_2",
                         title = "Web Scraping Project",
-                        description = "Create automated web scraping tool with Python and Beautiful Soup",
-                        reward = 1200.0,
-                        difficulty = "Medium",
-                        minLevelRequired = 3,
-                        type = "bounty",
-                        status = "expired",
-                        createdAt = Instant.now().minus(20, ChronoUnit.DAYS),
-                        deadline = Instant.now().minus(2, ChronoUnit.DAYS)
+                        company = "TechCorp Solutions",
+                        deadline = "2024-11-14T23:59:59Z",
+                        rewardXp = 120,
+                        rewardMoney = 1200,
+                        status = "expired"
                     )
                 )
 

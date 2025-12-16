@@ -35,7 +35,7 @@ fun EventCard(
     onRegister: (Int) -> Unit = {}
 ) {
     val timeText = viewModel.formatDurationShort(event.eventDate)
-    val registeredCount = event.registrations.size
+    val registeredCount = event.currentRegistrations
 
     Card(
         colors = CardDefaults.cardColors(CardBackground),
@@ -134,7 +134,7 @@ fun EventCardPreview() {
         eventDate = now.plusSeconds(60 * 60 * 24),
         companyId = 7,
         registeredQuota = 200,
-        registrations = emptyList()
+        currentRegistrations = 0
     )
 
     EventCard(event = sampleEvent)
