@@ -127,6 +127,9 @@ fun AppRoute() {
                     onNavigateToPostPage = { navController.navigate(AppView.Posts.name) },
                     onNavigateToPostDetail = { postId ->
                         navController.navigate("${AppView.PostDetail.name}/$postId")
+                    },
+                    onNavigateToBountyDetail = { bountyId ->
+                        navController.navigate("bounty_detail/$bountyId")
                     }
                 )
             }
@@ -180,6 +183,9 @@ fun AppRoute() {
                         navController.navigate(AppView.Login.name) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onNavigateToEditProfile = {
+                        navController.navigate("profile_edit")
                     }
                 )
             }
@@ -198,6 +204,22 @@ fun AppRoute() {
 
             composable(AppView.Create.name) {
                 CreatePage(onNavigateBack = { navController.popBackStack() })
+            }
+
+            // Bounty Detail Route
+            composable("bounty_detail/{bountyId}") { backStackEntry ->
+                val bountyId = backStackEntry.arguments?.getString("bountyId") ?: ""
+                com.jason.alp_vp.ui.screens.BountyDetailScreen(
+                    bountyId = bountyId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            // Profile Edit Route
+            composable("profile_edit") {
+                com.jason.alp_vp.ui.screens.ProfileEditScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
     }

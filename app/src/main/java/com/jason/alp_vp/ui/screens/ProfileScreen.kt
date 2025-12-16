@@ -35,6 +35,7 @@ private val SubText = Color(0xFF98A0B3)
 fun ProfileScreen(
     authViewModel: AuthViewModel,
     onNavigateToLogin: () -> Unit,
+    onNavigateToEditProfile: () -> Unit = {},
     profileViewModel: ProfileViewModel = viewModel()
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -103,7 +104,32 @@ fun ProfileScreen(
                     )
                 }
 
-                item { Spacer(modifier = Modifier.height(24.dp)) }
+                // Edit Profile Button
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = onNavigateToEditProfile,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = AccentBlue
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Edit Profile", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(8.dp)) }
 
                 // Stats Card
                 profileStats?.let { stats ->

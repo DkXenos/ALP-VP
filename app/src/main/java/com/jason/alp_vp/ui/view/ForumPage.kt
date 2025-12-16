@@ -1,6 +1,7 @@
 // kotlin
 package com.jason.alp_vp.ui.view
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -44,7 +45,8 @@ fun ForumPage(
     bountyViewModel: com.jason.alp_vp.ui.viewmodel.BountyViewModel = viewModel(),
     onNavigateToEventPage: () -> Unit = {},
     onNavigateToPostPage: () -> Unit = {},
-    onNavigateToPostDetail: (Int) -> Unit = {}
+    onNavigateToPostDetail: (Int) -> Unit = {},
+    onNavigateToBountyDetail: (String) -> Unit = {}
 ) {
     val bounties by bountyViewModel.bounties.collectAsState()
     val isLoadingBounties by bountyViewModel.isLoading.collectAsState()
@@ -169,7 +171,8 @@ fun ForumPage(
                 items(bounties) { bounty ->
                     BountyCardItem(
                         bounty = bounty,
-                        onClaimClick = { bountyViewModel.claimBounty(bounty.id) }
+                        onClaimClick = { bountyViewModel.claimBounty(bounty.id) },
+                        onClick = { onNavigateToBountyDetail(bounty.id) }
                     )
                 }
             }
@@ -186,6 +189,7 @@ fun ForumPage(
 fun BountyCardItem(
     bounty: com.jason.alp_vp.ui.model.Bounty,
     onClaimClick: () -> Unit,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -194,6 +198,7 @@ fun BountyCardItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
+            .clickable { onClick() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
