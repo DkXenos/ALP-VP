@@ -2,8 +2,8 @@ package com.jason.alp_vp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jason.alp_vp.model.AuthRequest
-import com.jason.alp_vp.model.AuthResponse
+import com.jason.alp_vp.model.LoginRequest
+import com.jason.alp_vp.model.RegisterRequest
 import com.jason.alp_vp.network.ApiClient
 import com.jason.alp_vp.network.AuthApi
 import com.jason.alp_vp.utils.TokenManager
@@ -15,7 +15,7 @@ class AuthViewModel : ViewModel() {
 
     private val api = ApiClient.client.create(AuthApi::class.java)
 
-    private val _authResponse = MutableStateFlow<AuthResponse?>(null)
+    private val _authResponse = MutableStateFlow<com.jason.alp_vp.model.AuthResponse?>(null)
     val authResponse = _authResponse.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
@@ -36,7 +36,7 @@ class AuthViewModel : ViewModel() {
             _isLoading.value = true
             _error.value = null
             try {
-                val response = api.login(AuthRequest(email = email, password = password))
+                val response = api.login(LoginRequest(email = email, password = password))
                 _authResponse.value = response
 
                 // Save token and user data
@@ -62,7 +62,7 @@ class AuthViewModel : ViewModel() {
             _error.value = null
             try {
                 val response = api.register(
-                    AuthRequest(
+                    RegisterRequest(
                         username = username,
                         email = email,
                         password = password,

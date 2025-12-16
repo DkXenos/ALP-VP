@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jason.alp_vp.viewmodel.AuthViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     navController: NavController,
@@ -18,6 +19,8 @@ fun RegisterScreen(
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("TALENT") }
+    var roleDropdownExpanded by remember { mutableStateOf(false) }
 
     val error by authViewModel.error.collectAsState()
     val isLoading by authViewModel.isLoading.collectAsState()
@@ -68,10 +71,50 @@ fun RegisterScreen(
             visualTransformation = PasswordVisualTransformation(),
             enabled = !isLoading
         )
+        Spacer(Modifier.height(12.dp))
+
+        // Role Selector
+        ExposedDropdownMenuBox(
+            expanded = roleDropdownExpanded,
+            onExpandedChange = { if (!isLoading) roleDropdownExpanded = !roleDropdownExpanded }
+        ) {
+            OutlinedTextField(
+                value = selectedRole,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Role") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roleDropdownExpanded) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                enabled = !isLoading,
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+            )
+            ExposedDropdownMenu(
+                expanded = roleDropdownExpanded,
+                onDismissRequest = { roleDropdownExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("TALENT") },
+                    onClick = {
+                        selectedRole = "TALENT"
+                        roleDropdownExpanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("COMPANY") },
+                    onClick = {
+                        selectedRole = "COMPANY"
+                        roleDropdownExpanded = false
+                    }
+                )
+            }
+        }
+
         Spacer(Modifier.height(20.dp))
 
         Button(
-            onClick = { authViewModel.register(username, email, password) },
+            onClick = { authViewModel.register(username, email, password, selectedRole) },
             modifier = Modifier.fillMaxWidth(),
             enabled = !isLoading && username.isNotBlank() && email.isNotBlank() && password.isNotBlank()
         ) {
