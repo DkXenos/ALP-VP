@@ -83,7 +83,7 @@ fun AppRoute() {
 
     Scaffold(
         topBar = {
-            val noHeaderPages = listOf(AppView.PostDetail.name) + authPages
+            val noHeaderPages = listOf(AppView.PostDetail.name) + authPages + rootPages  // Hide top bar on root pages too
             val currentBaseRoute = currentRoute?.split("/")?.first()
             if (currentBaseRoute != null && currentBaseRoute !in noHeaderPages) {
                 val displayView = AppView.entries.find { it.name == currentBaseRoute } ?: AppView.Forum

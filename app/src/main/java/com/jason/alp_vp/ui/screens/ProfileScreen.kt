@@ -31,6 +31,7 @@ private val AccentGreen = Color(0xFF57D06A)
 private val TitleColor = Color(0xFFFFFFFF)
 private val SubText = Color(0xFF98A0B3)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     authViewModel: AuthViewModel,
@@ -50,10 +51,38 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(Background)
     ) {
+        // Persistent Top App Bar with logout action (always visible)
+        TopAppBar(
+            title = {
+                Text(text = "Profile", color = TitleColor, fontWeight = FontWeight.Bold)
+            },
+            actions = {
+                IconButton(onClick = { showLogoutDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.ExitToApp,
+                        contentDescription = "Logout",
+                        tint = AccentRed
+                    )
+                }
+            },
+            navigationIcon = {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = AccentBlue,
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = CardBackground)
+        )
+
+        // Main content below appbar
         if (isLoading && profileData == null) {
             // Initial loading state - WITH EMERGENCY LOGOUT
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 72.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -85,13 +114,20 @@ fun ProfileScreen(
                         fontWeight = FontWeight.Medium
                     )
                 }
+
+                // If stats available while loading, surface them below
+                profileStats?.let { stats ->
+                    Spacer(modifier = Modifier.height(24.dp))
+                    StatsCard(stats = stats)
+                }
             }
         } else if (error != null && profileData == null) {
             // Error state - WITH LOGOUT BUTTON
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
+                    .padding(top = 72.dp)
+                    .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -144,14 +180,20 @@ fun ProfileScreen(
                     fontSize = 12.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
+
+                // If stats available while error, show them below
+                profileStats?.let { stats ->
+                    Spacer(modifier = Modifier.height(24.dp))
+                    StatsCard(stats = stats)
+                }
             }
         } else {
-            // Main content
+            // Main content when profileData present (or partially present)
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 32.dp)
+                contentPadding = PaddingValues(top = 84.dp, bottom = 32.dp)
             ) {
-                item { Spacer(modifier = Modifier.height(24.dp)) }
+                item { Spacer(modifier = Modifier.height(8.dp)) }
 
                 // Profile Header
                 item {
