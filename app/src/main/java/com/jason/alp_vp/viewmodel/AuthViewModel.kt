@@ -3,18 +3,19 @@ package com.jason.alp_vp.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jason.alp_vp.data.container.AppContainer
 import com.jason.alp_vp.model.LoginRequest
 import com.jason.alp_vp.model.RegisterRequest
-import com.jason.alp_vp.network.ApiClient
-import com.jason.alp_vp.network.AuthApi
 import com.jason.alp_vp.utils.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(
+    private val container: AppContainer = AppContainer()
+) : ViewModel() {
 
-    private val api = ApiClient.client.create(AuthApi::class.java)
+    private val api = container.authService
 
     private val _authResponse = MutableStateFlow<com.jason.alp_vp.model.AuthResponse?>(null)
     val authResponse = _authResponse.asStateFlow()

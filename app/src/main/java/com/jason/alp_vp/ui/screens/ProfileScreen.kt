@@ -210,7 +210,9 @@ fun ProfileScreen(
                     ProfileHeader(
                         username = profileData?.getDisplayName() ?: "User",
                         email = profileData?.email ?: "",
-                        role = profileData?.role ?: "TALENT"
+                        role = profileData?.role ?: "TALENT",
+                        xp = profileData?.xp ?: 0,
+                        balance = profileData?.balance ?: 0
                     )
                 }
 
@@ -352,7 +354,13 @@ fun ProfileScreen(
 // Helper Composables
 
 @Composable
-private fun ProfileHeader(username: String, email: String, role: String) {
+private fun ProfileHeader(
+    username: String,
+    email: String,
+    role: String,
+    xp: Int,
+    balance: Int
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -399,6 +407,82 @@ private fun ProfileHeader(username: String, email: String, role: String) {
             shape = RoundedCornerShape(20.dp),
             color = if (role == "COMPANY") AccentBlue.copy(alpha = 0.2f) else AccentGreen.copy(alpha = 0.2f)
         ) {
+            Text(
+                text = role,
+                color = if (role == "COMPANY") AccentBlue else AccentGreen,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+            )
+        }
+
+        // XP and Balance Row (only for TALENT users)
+        if (role == "TALENT") {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // XP Display
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = "⭐", fontSize = 20.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = NumberFormat.getNumberInstance().format(xp),
+                                color = AccentBlue,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Total XP",
+                            color = SubText,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    // Divider
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(50.dp)
+                            .background(SubText.copy(alpha = 0.3f))
+                    )
+
+                    // Balance Display
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = "💰", fontSize = 20.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Rp ${NumberFormat.getNumberInstance(Locale("id", "ID")).format(balance)}",
+                                color = AccentGreen,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Balance",
+                            color = SubText,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
             Text(
                 text = role,
                 color = if (role == "COMPANY") AccentBlue else AccentGreen,

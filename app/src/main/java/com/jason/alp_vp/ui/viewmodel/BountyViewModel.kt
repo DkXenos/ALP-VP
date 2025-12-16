@@ -3,17 +3,18 @@ package com.jason.alp_vp.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jason.alp_vp.data.service.BountyService
+import com.jason.alp_vp.data.container.AppContainer
 import com.jason.alp_vp.data.service.toUiModel
-import com.jason.alp_vp.network.ApiClient
 import com.jason.alp_vp.ui.model.Bounty
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class BountyViewModel : ViewModel() {
+class BountyViewModel(
+    private val container: AppContainer = AppContainer()
+) : ViewModel() {
 
-    private val bountyService = ApiClient.client.create(BountyService::class.java)
+    private val bountyService = container.bountyService
 
     private val _bounties = MutableStateFlow<List<Bounty>>(emptyList())
     val bounties = _bounties.asStateFlow()

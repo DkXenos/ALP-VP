@@ -43,8 +43,12 @@ fun BountyDetailScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val claimSuccess by viewModel.claimSuccess.collectAsState()
+    val submitSuccess by viewModel.submitSuccess.collectAsState()
 
     var showClaimDialog by remember { mutableStateOf(false) }
+    var showSubmitDialog by remember { mutableStateOf(false) }
+    var submissionUrl by remember { mutableStateOf("") }
+    var submissionNotes by remember { mutableStateOf("") }
 
     LaunchedEffect(bountyId) {
         viewModel.loadBountyDetail(bountyId)
@@ -56,6 +60,15 @@ fun BountyDetailScreen(
             viewModel.resetClaimSuccess()
             // Notify parent that bounty was claimed
             onBountyClaimed()
+        }
+    }
+
+    LaunchedEffect(submitSuccess) {
+        if (submitSuccess) {
+            showSubmitDialog = false
+            submissionUrl = ""
+            submissionNotes = ""
+            viewModel.resetSubmitSuccess()
         }
     }
 
@@ -234,6 +247,69 @@ fun BountyDetailScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Submission Status Card (if work has been submitted)
+                        if (!bountyDetail!!.submissionUrl.isNullOrBlank()) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = CardBackground),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = AccentGreen,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = "Work Submitted",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = AccentGreen
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        text = "Submission URL:",
+                                        fontSize = 12.sp,
+                                        color = SubText
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = bountyDetail!!.submissionUrl!!,
+                                        fontSize = 14.sp,
+                                        color = AccentBlue,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    if (!bountyDetail!!.submissionNotes.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Text(
+                                            text = "Notes:",
+                                            fontSize = 12.sp,
+                                            color = SubText
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = bountyDetail!!.submissionNotes!!,
+                                            fontSize = 14.sp,
+                                            color = TitleColor
+                                        )
+                                    }
+                                    if (!bountyDetail!!.submittedAt.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "Submitted: ${formatDate(bountyDetail!!.submittedAt!!)}",
+                                            fontSize = 12.sp,
+                                            color = SubText
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
                         // Description
                         if (!bountyDetail!!.description.isNullOrBlank()) {
                             InfoSection(
@@ -254,25 +330,43 @@ fun BountyDetailScreen(
                         contentAlignment = Alignment.BottomCenter
                     ) {
                         when {
-                            bountyDetail!!.claimedBy != null -> {
+                            // Already submitted work
+                            !bountyDetail!!.submissionUrl.isNullOrBlank() -> {
                                 Button(
                                     onClick = { },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(56.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.Gray,
-                                        disabledContainerColor = Color.Gray
+                                        containerColor = AccentGreen.copy(alpha = 0.5f),
+                                        disabledContainerColor = AccentGreen.copy(alpha = 0.5f)
                                     ),
                                     enabled = false,
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    Icon(Icons.Default.Check, contentDescription = null)
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null)
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Already Claimed", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text("Work Submitted", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
-                            bountyDetail!!.status.uppercase() == "CLOSED" -> {
+                            // User has claimed, can submit work
+                            bountyDetail!!.claimedBy != null -> {
+                                Button(
+                                    onClick = { showSubmitDialog = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = AccentBlue
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Send, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Submit Work", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            bountyDetail!!.status.uppercase() == "CLOSED" || bountyDetail!!.status.uppercase() == "COMPLETED" -> {
                                 Button(
                                     onClick = { },
                                     modifier = Modifier
@@ -338,6 +432,82 @@ fun BountyDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showClaimDialog = false }) {
+                    Text("Cancel", color = SubText)
+                }
+            }
+        )
+    }
+
+    // Submit Work Dialog
+    if (showSubmitDialog) {
+        AlertDialog(
+            onDismissRequest = { showSubmitDialog = false },
+            containerColor = CardBackground,
+            title = {
+                Text("Submit Your Work", color = TitleColor, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column {
+                    Text(
+                        "Share the URL of your completed work:",
+                        color = SubText,
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = submissionUrl,
+                        onValueChange = { submissionUrl = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("URL (GitHub, Drive, etc.)", fontSize = 12.sp) },
+                        placeholder = { Text("https://...", fontSize = 12.sp) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = TitleColor,
+                            unfocusedTextColor = TitleColor,
+                            focusedBorderColor = AccentBlue,
+                            unfocusedBorderColor = SubText,
+                            focusedLabelColor = AccentBlue,
+                            unfocusedLabelColor = SubText
+                        ),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = submissionNotes,
+                        onValueChange = { submissionNotes = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Notes (optional)", fontSize = 12.sp) },
+                        placeholder = { Text("Additional information...", fontSize = 12.sp) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = TitleColor,
+                            unfocusedTextColor = TitleColor,
+                            focusedBorderColor = AccentBlue,
+                            unfocusedBorderColor = SubText,
+                            focusedLabelColor = AccentBlue,
+                            unfocusedLabelColor = SubText
+                        ),
+                        maxLines = 3
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (submissionUrl.isNotBlank()) {
+                            viewModel.submitWork(bountyId, submissionUrl, submissionNotes.ifBlank { null })
+                        }
+                    },
+                    enabled = submissionUrl.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                ) {
+                    Text("Submit", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showSubmitDialog = false
+                    submissionUrl = ""
+                    submissionNotes = ""
+                }) {
                     Text("Cancel", color = SubText)
                 }
             }

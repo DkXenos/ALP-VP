@@ -42,6 +42,8 @@ data class ProfileData(
     val name: String? = null,       // For companies (COMPANY)
     val email: String,
     val role: String,
+    val xp: Int? = 0,  // User's total XP
+    val balance: Int? = 0,  // User's balance in Rupiah
     val posts: List<PostItem>,
     val events: List<EventItem>,
     val bounties: List<ProfileBountyItem>
@@ -109,8 +111,8 @@ data class ProfileStats(
     val totalBounties: Int,
     val activeBounties: Int,
     val completedBounties: Int,
-    val totalXpEarned: Int,
-    val totalMoneyEarned: Int
+    val totalXpEarned: Int,  // Real-time XP from database
+    val totalMoneyEarned: Int  // Real-time earnings from database
 )
 
 data class UpdateProfileResponse(

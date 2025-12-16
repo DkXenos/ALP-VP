@@ -3,15 +3,17 @@ package com.jason.alp_vp.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jason.alp_vp.data.container.AppContainer
 import com.jason.alp_vp.data.service.*
-import com.jason.alp_vp.network.ApiClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(
+    private val container: AppContainer = AppContainer()
+) : ViewModel() {
 
-    private val profileService = ApiClient.client.create(ProfileService::class.java)
+    private val profileService = container.profileService
 
     private val _profileData = MutableStateFlow<ProfileData?>(null)
     val profileData = _profileData.asStateFlow()
@@ -47,6 +49,8 @@ class ProfileViewModel : ViewModel() {
                     Log.d("ProfileViewModel", "Profile name: ${profileData.name}")
                     Log.d("ProfileViewModel", "Profile email: ${profileData.email}")
                     Log.d("ProfileViewModel", "Profile role: ${profileData.role}")
+                    Log.d("ProfileViewModel", "Profile XP: ${profileData.xp}")
+                    Log.d("ProfileViewModel", "Profile Balance: ${profileData.balance}")
                     Log.d("ProfileViewModel", "Display name: ${profileData.getDisplayName()}")
                 } else {
                     val errorMsg = "Failed to load profile: ${response.code()} - ${response.message()}"

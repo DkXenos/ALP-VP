@@ -1,4 +1,4 @@
-package com.jason.alp_vp.network
+package com.jason.alp_vp.data.service
 
 import com.jason.alp_vp.model.AuthRequest
 import com.jason.alp_vp.model.AuthResponse
@@ -18,3 +18,4 @@ interface AuthApi {
     @POST("companies/login")
     suspend fun companyLogin(@Body request: LoginRequest): CompanyAuthResponse
 }
+
