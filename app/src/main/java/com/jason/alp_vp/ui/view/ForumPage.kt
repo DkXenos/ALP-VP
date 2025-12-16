@@ -46,8 +46,6 @@ fun ForumPage(
     onNavigateToPostPage: () -> Unit = {},
     onNavigateToPostDetail: (Int) -> Unit = {}
 ) {
-    val events by viewModel.events.collectAsState()
-    val postUis by viewModel.postUis.collectAsState()
     val bounties by bountyViewModel.bounties.collectAsState()
     val isLoadingBounties by bountyViewModel.isLoading.collectAsState()
     val bountyError by bountyViewModel.error.collectAsState()
@@ -167,8 +165,8 @@ fun ForumPage(
                     }
                 }
             } else {
-                // Show first 3 bounties
-                items(bounties.take(3)) { bounty ->
+                // Show all bounties (not limited to 3)
+                items(bounties) { bounty ->
                     BountyCardItem(
                         bounty = bounty,
                         onClaimClick = { bountyViewModel.claimBounty(bounty.id) }
@@ -177,94 +175,12 @@ fun ForumPage(
             }
 
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // Event Posts Section Header
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Event Posts",
-                        color = TitleColor,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    TextButton(onClick = onNavigateToEventPage) {
-                        Text(
-                            text = "View All",
-                            color = AccentBlue,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
-            // Show only first 2 events
-            items(events.take(2)) { event ->
-                EventCard(
-                    event = event,
-                    viewModel = viewModel,
-                    onRegister = { viewModel.registerToEvent(it) }
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // Community Feed Section Header
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Community Feed",
-                        color = TitleColor,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    TextButton(onClick = onNavigateToPostPage) {
-                        Text(
-                            text = "View All",
-                            color = AccentBlue,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
-            // Show only first 3 posts
-            items(postUis.take(3)) { postUi ->
-                PostCard(
-                    id = postUi.post.id,
-                    content = postUi.post.content,
-                    createdAt = postUi.post.createdAt,
-                    upvoteCount = postUi.upvoteCount,
-                    downvoteCount = postUi.downvoteCount,
-                    onUpvote = { viewModel.upvote(postUi.post.id) },
-                    onDownvote = { viewModel.downvote(postUi.post.id) },
-                    onClick = { onNavigateToPostDetail(postUi.post.id) }
-                )
-            }
-
-            item {
                 Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }
 }
+
 
 @Composable
 fun BountyCardItem(

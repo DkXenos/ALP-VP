@@ -8,8 +8,10 @@ import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -25,6 +27,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.jason.alp_vp.ui.screens.LoginScreen
+import com.jason.alp_vp.ui.screens.ProfileScreen
 import com.jason.alp_vp.ui.screens.RegisterScreen
 import com.jason.alp_vp.ui.view.*
 import com.jason.alp_vp.ui.viewmodel.ForumPageViewModel
@@ -41,10 +44,11 @@ enum class AppView(
 ) {
     Login("Login"),
     Register("Register"),
-    Forum("Forum", Icons.Filled.Home, Icons.Outlined.Home),
+    Forum("Homepage", Icons.Filled.Home, Icons.Outlined.Home),
     Posts("Posts", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
     PostDetail("PostDetail"),
     Events("Events"),
+    Profile("Profile", Icons.Filled.Person, Icons.Outlined.Person),
     CompanyProfile("Company"),
     WalletDetails("Wallet"),
     Create("Create")
@@ -66,7 +70,7 @@ fun AppRoute() {
     }
 
     // Pages that should show the bottom bar
-    val rootPages = listOf(AppView.Forum.name, AppView.Posts.name, AppView.Events.name)
+    val rootPages = listOf(AppView.Forum.name, AppView.Posts.name, AppView.Events.name, AppView.Profile.name)
 
     // Auth pages (no top/bottom bar)
     val authPages = listOf(AppView.Login.name, AppView.Register.name)
@@ -88,9 +92,10 @@ fun AppRoute() {
         bottomBar = {
             if (currentRoute in rootPages) {
                 val items = listOf(
-                    BottomNavItem(AppView.Forum, "Forum"),
+                    BottomNavItem(AppView.Forum, "Home"),
                     BottomNavItem(AppView.Posts, "Posts"),
-                    BottomNavItem(AppView.Events, "Events")
+                    BottomNavItem(AppView.Events, "Events"),
+                    BottomNavItem(AppView.Profile, "Profile")
                 )
                 MyBottomNavigationBar(navController, navBackStackEntry?.destination, items)
             }
@@ -166,6 +171,17 @@ fun AppRoute() {
 
             composable(AppView.Events.name) {
                 EventPage(onBack = { navController.popBackStack() })
+            }
+
+            composable(AppView.Profile.name) {
+                ProfileScreen(
+                    authViewModel = authViewModel,
+                    onNavigateToLogin = {
+                        navController.navigate(AppView.Login.name) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(AppView.CompanyProfile.name) {
