@@ -51,15 +51,43 @@ fun ProfileScreen(
             .background(Background)
     ) {
         if (isLoading && profileData == null) {
-            // Initial loading state
-            Box(
+            // Initial loading state - WITH EMERGENCY LOGOUT
+            Column(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
                 CircularProgressIndicator(color = AccentBlue)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Loading profile...",
+                    color = SubText,
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Emergency logout if stuck loading
+                TextButton(
+                    onClick = { showLogoutDialog = true }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ExitToApp,
+                        contentDescription = "Logout",
+                        tint = AccentRed,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        "Logout",
+                        color = AccentRed,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         } else if (error != null && profileData == null) {
-            // Error state
+            // Error state - WITH LOGOUT BUTTON
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -77,15 +105,45 @@ fun ProfileScreen(
                 Text(
                     text = error ?: "Unknown error",
                     color = SubText,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Retry Button
                 Button(
                     onClick = { profileViewModel.refresh() },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Retry")
+                    Text("Retry", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // EMERGENCY LOGOUT BUTTON - Always available
+                Button(
+                    onClick = { showLogoutDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentRed),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ExitToApp,
+                        contentDescription = "Logout",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Logout Anyway", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "You can logout even if profile failed to load",
+                    color = SubText,
+                    fontSize = 12.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
             }
         } else {
             // Main content
