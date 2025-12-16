@@ -51,38 +51,13 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(Background)
     ) {
-        // Persistent Top App Bar with logout action (always visible)
-        TopAppBar(
-            title = {
-                Text(text = "Profile", color = TitleColor, fontWeight = FontWeight.Bold)
-            },
-            actions = {
-                IconButton(onClick = { showLogoutDialog = true }) {
-                    Icon(
-                        imageVector = Icons.Default.ExitToApp,
-                        contentDescription = "Logout",
-                        tint = AccentRed
-                    )
-                }
-            },
-            navigationIcon = {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = AccentBlue,
-                    modifier = Modifier.padding(start = 12.dp)
-                )
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = CardBackground)
-        )
-
-        // Main content below appbar
+        // Main content
         if (isLoading && profileData == null) {
             // Initial loading state - WITH EMERGENCY LOGOUT
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 72.dp),
+                    .padding(top = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -126,7 +101,7 @@ fun ProfileScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 72.dp)
+                    .padding(top = 16.dp)
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -191,8 +166,43 @@ fun ProfileScreen(
             // Main content when profileData present (or partially present)
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(top = 84.dp, bottom = 32.dp)
+                contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
             ) {
+                // Header with Profile title and Logout button
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = AccentBlue,
+                                modifier = Modifier.size(28.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Profile",
+                                color = TitleColor,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        IconButton(onClick = { showLogoutDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.ExitToApp,
+                                contentDescription = "Logout",
+                                tint = AccentRed,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+
                 item { Spacer(modifier = Modifier.height(8.dp)) }
 
                 // Profile Header

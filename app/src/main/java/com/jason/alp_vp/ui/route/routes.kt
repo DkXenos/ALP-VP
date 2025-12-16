@@ -85,9 +85,18 @@ fun AppRoute() {
         topBar = {
             val noHeaderPages = listOf(AppView.PostDetail.name) + authPages + rootPages  // Hide top bar on root pages too
             val currentBaseRoute = currentRoute?.split("/")?.first()
+
+            // Show top bar for detail pages like bounty_detail, profile_edit
             if (currentBaseRoute != null && currentBaseRoute !in noHeaderPages) {
-                val displayView = AppView.entries.find { it.name == currentBaseRoute } ?: AppView.Forum
-                MyTopAppBar(displayView, navController, canNavigateBack)
+                val title = when (currentBaseRoute) {
+                    "bounty_detail" -> "Bounty Details"
+                    "profile_edit" -> "Edit Profile"
+                    else -> {
+                        val displayView = AppView.entries.find { it.name == currentBaseRoute } ?: AppView.Forum
+                        displayView.title
+                    }
+                }
+                MyTopAppBar(title, navController, canNavigateBack)
             }
         },
         bottomBar = {
@@ -287,14 +296,14 @@ fun MyBottomNavigationBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyTopAppBar(
-    currentView: AppView,
+    title: String,
     navController: NavHostController,
     canNavigateBack: Boolean
 ) {
     CenterAlignedTopAppBar(
         title = {
             Text(
-                text = currentView.title,
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )

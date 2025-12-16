@@ -17,7 +17,10 @@ object TokenManager {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
 
-    fun saveToken(token: String) {
+    fun saveToken(token: String?) {
+        if (token.isNullOrBlank()) {
+            throw IllegalArgumentException("Token cannot be null or empty")
+        }
         prefs.edit().putString(KEY_TOKEN, token).apply()
     }
 
@@ -25,10 +28,10 @@ object TokenManager {
         return prefs.getString(KEY_TOKEN, null)
     }
 
-    fun saveUserData(id: Int, username: String, email: String, role: String) {
+    fun saveUserData(id: Int, username: String?, email: String, role: String) {
         prefs.edit().apply {
             putInt(KEY_USER_ID, id)
-            putString(KEY_USERNAME, username)
+            putString(KEY_USERNAME, username ?: email.substringBefore("@"))  // Use email prefix if username is null
             putString(KEY_EMAIL, email)
             putString(KEY_ROLE, role)
             apply()
