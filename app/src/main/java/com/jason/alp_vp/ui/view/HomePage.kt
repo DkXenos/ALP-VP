@@ -43,7 +43,6 @@ fun HomePage(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Bounties Section Header
             item {
                 Row(
                     modifier = Modifier

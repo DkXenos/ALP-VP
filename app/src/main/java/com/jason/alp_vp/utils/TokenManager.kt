@@ -9,7 +9,7 @@ object TokenManager {
     private const val KEY_USER_ID = "user_id"
     private const val KEY_USERNAME = "username"
     private const val KEY_EMAIL = "email"
-    private const val KEY_ROLE = "role"
+    private const val KEY_ACCOUNT_TYPE = "account_type" // USER or COMPANY
 
     private lateinit var prefs: SharedPreferences
 
@@ -25,12 +25,12 @@ object TokenManager {
         return prefs.getString(KEY_TOKEN, null)
     }
 
-    fun saveUserData(id: Int, username: String, email: String, role: String) {
+    fun saveUserData(id: Int, username: String, email: String, accountType: String) {
         prefs.edit().apply {
             putInt(KEY_USER_ID, id)
             putString(KEY_USERNAME, username)
             putString(KEY_EMAIL, email)
-            putString(KEY_ROLE, role)
+            putString(KEY_ACCOUNT_TYPE, accountType) // "USER" or "COMPANY"
             apply()
         }
     }
@@ -43,6 +43,22 @@ object TokenManager {
         return prefs.getString(KEY_USERNAME, null)
     }
 
+    fun getEmail(): String? {
+        return prefs.getString(KEY_EMAIL, null)
+    }
+
+    fun getAccountType(): String? {
+        return prefs.getString(KEY_ACCOUNT_TYPE, null)
+    }
+
+    fun isUser(): Boolean {
+        return getAccountType() == "USER"
+    }
+
+    fun isCompany(): Boolean {
+        return getAccountType() == "COMPANY"
+    }
+
     fun isLoggedIn(): Boolean {
         return getToken() != null
     }
@@ -51,4 +67,6 @@ object TokenManager {
         prefs.edit().clear().apply()
     }
 }
+
+
 

@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    private const val BASE_URL = "http://192.168.30.108:3000/api/"
+    private const val BASE_URL = "http://192.168.30.105:3000/api/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -21,8 +21,6 @@ object ApiClient {
                 val original = chain.request()
                 val requestBuilder = original.newBuilder()
 
-                // Add JWT token to all requests if available
-                // Wrap in try-catch to handle case where TokenManager not initialized yet
                 try {
                     val token = TokenManager.getToken()
                     if (token != null) {

@@ -31,21 +31,32 @@ class AuthViewModel : ViewModel() {
         checkLoginStatus()
     }
 
-    fun login(email: String, password: String) {
+    fun login(email: String, password: String, accountType: String = "USER") {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             try {
+                // Map USER to TALENT for backend compatibility
+                val roleForBackend = if (accountType == "USER") "TALENT" else "COMPANY"
+
                 val response = api.login(LoginRequest(email = email, password = password))
                 _authResponse.value = response
 
-                // Save token and user data
+                // Validate that the user's role matches the selected account type
+                val userRole = response.data.role.uppercase()
+                if (userRole != roleForBackend) {
+                    _error.value = "Invalid credentials for the selected account type. Please check your selection."
+                    _isLoading.value = false
+                    return@launch
+                }
+
+                // Save token and user data with account type (USER or COMPANY)
                 TokenManager.saveToken(response.data.token)
                 TokenManager.saveUserData(
                     id = response.data.id,
                     username = response.data.username,
                     email = response.data.email,
-                    role = response.data.role
+                    accountType = accountType // Save as "USER" or "COMPANY"
                 )
                 _isLoggedIn.value = true
             } catch (e: Exception) {
@@ -56,28 +67,31 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun register(username: String, email: String, password: String, role: String = "TALENT") {
+    fun register(username: String, email: String, password: String, accountType: String = "USER") {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             try {
+                // Map USER to TALENT for backend compatibility
+                val roleForBackend = if (accountType == "USER") "TALENT" else "COMPANY"
+
                 val response = api.register(
                     RegisterRequest(
                         username = username,
                         email = email,
                         password = password,
-                        role = role
+                        role = roleForBackend
                     )
                 )
                 _authResponse.value = response
 
-                // Save token and user data
+                // Save token and user data with account type (USER or COMPANY)
                 TokenManager.saveToken(response.data.token)
                 TokenManager.saveUserData(
                     id = response.data.id,
                     username = response.data.username,
                     email = response.data.email,
-                    role = response.data.role
+                    accountType = accountType // Save as "USER" or "COMPANY"
                 )
                 _isLoggedIn.value = true
             } catch (e: Exception) {

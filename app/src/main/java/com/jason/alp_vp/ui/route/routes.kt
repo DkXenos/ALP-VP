@@ -150,11 +150,13 @@ fun AppRoute() {
 
                 val selectedPost by vm.selectedPost.collectAsState()
                 val replies by vm.selectedPostReplies.collectAsState()
+                val timeAgo by vm.selectedPostTimeAgo.collectAsState()
 
                 if (selectedPost != null) {
                     PostDetail(
                         post = selectedPost!!,
                         replies = replies,
+                        timeAgo = timeAgo,
                         onUpvotePost = { vm.upvotePost(it) },
                         onDownvotePost = { vm.downvotePost(it) },
                         onUpvoteReply = { vm.upvoteReply(it) },

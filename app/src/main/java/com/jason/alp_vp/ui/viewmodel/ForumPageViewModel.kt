@@ -38,6 +38,10 @@ class ForumPageViewModel(
     private val _selectedPostReplies = MutableStateFlow<List<Comment>>(emptyList())
     val selectedPostReplies: StateFlow<List<Comment>> = _selectedPostReplies
 
+    // Expose a pre-formatted "time ago" string for the selected post so UI doesn't compute it
+    private val _selectedPostTimeAgo = MutableStateFlow("")
+    val selectedPostTimeAgo: StateFlow<String> = _selectedPostTimeAgo
+
     private val currentUserId = 1 // Mock current user ID
 
     init {
@@ -146,6 +150,22 @@ class ForumPageViewModel(
             _selectedPost.value = post
             // Load replies dari comments yang ada di post
             _selectedPostReplies.value = post?.comments ?: emptyList()
+            // Compute and set time-ago string for the UI
+            _selectedPostTimeAgo.value = post?.let { computeTimeAgo(it.createdAt) } ?: ""
+        }
+    }
+
+    // Compute a short "time ago" string from a creation Instant (moved from PostDetail)
+    private fun computeTimeAgo(createdAt: Instant): String {
+        val now = Instant.now()
+        val duration = Duration.between(createdAt, now)
+
+        return when {
+            duration.toMinutes() < 1 -> "just now"
+            duration.toMinutes() < 60 -> "${duration.toMinutes()}m ago"
+            duration.toHours() < 24 -> "${duration.toHours()}h ago"
+            duration.toDays() < 7 -> "${duration.toDays()}d ago"
+            else -> "${duration.toDays() / 7}w ago"
         }
     }
 
