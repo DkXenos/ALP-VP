@@ -87,7 +87,10 @@ fun BountyItem.toUiModel(): Bounty {
         deadline = this.deadline ?: "",
         rewardXp = this.rewardXp ?: 0,
         rewardMoney = this.rewardMoney ?: 0,
-        status = this.status
+        status = this.status,
+        claimedBy = this.claimedBy,
+        assignedAt = this.assignedAt,
+        isCompleted = this.isCompleted ?: false
     )
 }
 

@@ -83,11 +83,20 @@ fun AppRoute() {
 
     Scaffold(
         topBar = {
-            val noHeaderPages = listOf(AppView.PostDetail.name) + authPages
+            val noHeaderPages = listOf(AppView.PostDetail.name) + authPages + rootPages  // Hide top bar on root pages too
             val currentBaseRoute = currentRoute?.split("/")?.first()
+
+            // Show top bar for detail pages like bounty_detail, profile_edit
             if (currentBaseRoute != null && currentBaseRoute !in noHeaderPages) {
-                val displayView = AppView.entries.find { it.name == currentBaseRoute } ?: AppView.Forum
-                MyTopAppBar(displayView, navController, canNavigateBack)
+                val title = when (currentBaseRoute) {
+                    "bounty_detail" -> "Bounty Details"
+                    "profile_edit" -> "Edit Profile"
+                    else -> {
+                        val displayView = AppView.entries.find { it.name == currentBaseRoute } ?: AppView.Forum
+                        displayView.title
+                    }
+                }
+                MyTopAppBar(title, navController, canNavigateBack)
             }
         },
         bottomBar = {
@@ -123,7 +132,17 @@ fun AppRoute() {
             }
 
             composable(AppView.Forum.name) {
+                val bountyViewModel: com.jason.alp_vp.ui.viewmodel.BountyViewModel = viewModel()
+
+                // Refresh bounties when navigating to this screen
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute == AppView.Forum.name) {
+                        bountyViewModel.loadAllBounties()
+                    }
+                }
+
                 HomePage(
+                    bountyViewModel = bountyViewModel,
                     onNavigateToBountyDetail = { bountyId ->
                         navController.navigate("bounty_detail/$bountyId")
                     }
@@ -176,8 +195,18 @@ fun AppRoute() {
             }
 
             composable(AppView.Profile.name) {
+                val profileViewModel: com.jason.alp_vp.ui.viewmodel.ProfileViewModel = viewModel()
+
+                // Refresh profile when navigating to this screen
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute == AppView.Profile.name) {
+                        profileViewModel.refresh()
+                    }
+                }
+
                 ProfileScreen(
                     authViewModel = authViewModel,
+                    profileViewModel = profileViewModel,
                     onNavigateToLogin = {
                         navController.navigate(AppView.Login.name) {
                             popUpTo(0) { inclusive = true }
@@ -208,9 +237,18 @@ fun AppRoute() {
             // Bounty Detail Route
             composable("bounty_detail/{bountyId}") { backStackEntry ->
                 val bountyId = backStackEntry.arguments?.getString("bountyId") ?: ""
+                val bountyViewModel: com.jason.alp_vp.ui.viewmodel.BountyViewModel = viewModel()
+                val profileViewModel: com.jason.alp_vp.ui.viewmodel.ProfileViewModel = viewModel()
+
                 com.jason.alp_vp.ui.screens.BountyDetailScreen(
                     bountyId = bountyId,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onBountyClaimed = {
+                        // Refresh bounties and profile data after claiming
+                        bountyViewModel.loadAllBounties()
+                        bountyViewModel.loadMyBounties()
+                        profileViewModel.refresh()
+                    }
                 )
             }
 
@@ -260,14 +298,14 @@ fun MyBottomNavigationBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyTopAppBar(
-    currentView: AppView,
+    title: String,
     navController: NavHostController,
     canNavigateBack: Boolean
 ) {
     CenterAlignedTopAppBar(
         title = {
             Text(
-                text = currentView.title,
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )

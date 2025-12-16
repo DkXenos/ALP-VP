@@ -45,7 +45,7 @@ fun ProfileEditScreen(
     // Initialize fields with current profile data
     LaunchedEffect(profileData) {
         profileData?.let {
-            username = it.username
+            username = it.getDisplayName()  // Use helper method that handles both username and name
             email = it.email
         }
     }

@@ -39,11 +39,19 @@ class ProfileViewModel : ViewModel() {
                 val response = profileService.getProfile()
 
                 if (response.isSuccessful && response.body() != null) {
-                    _profileData.value = response.body()!!.data
-                    Log.d("ProfileViewModel", "Profile loaded: ${response.body()!!.data}")
+                    val profileData = response.body()!!.data
+                    _profileData.value = profileData
+                    Log.d("ProfileViewModel", "Profile loaded successfully")
+                    Log.d("ProfileViewModel", "Profile ID: ${profileData.id}")
+                    Log.d("ProfileViewModel", "Profile username: ${profileData.username}")
+                    Log.d("ProfileViewModel", "Profile name: ${profileData.name}")
+                    Log.d("ProfileViewModel", "Profile email: ${profileData.email}")
+                    Log.d("ProfileViewModel", "Profile role: ${profileData.role}")
+                    Log.d("ProfileViewModel", "Display name: ${profileData.getDisplayName()}")
                 } else {
-                    val errorMsg = "Failed to load profile: ${response.code()}"
+                    val errorMsg = "Failed to load profile: ${response.code()} - ${response.message()}"
                     Log.e("ProfileViewModel", errorMsg)
+                    _error.value = errorMsg
                     _error.value = errorMsg
                 }
             } catch (e: Exception) {

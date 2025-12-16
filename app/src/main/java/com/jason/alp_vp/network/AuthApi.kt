@@ -2,6 +2,7 @@ package com.jason.alp_vp.network
 
 import com.jason.alp_vp.model.AuthRequest
 import com.jason.alp_vp.model.AuthResponse
+import com.jason.alp_vp.model.CompanyAuthResponse
 import com.jason.alp_vp.model.LoginRequest
 import com.jason.alp_vp.model.RegisterRequest
 import retrofit2.http.Body
@@ -13,4 +14,7 @@ interface AuthApi {
 
     @POST("login")
     suspend fun login(@Body request: LoginRequest): AuthResponse
+
+    @POST("companies/login")
+    suspend fun companyLogin(@Body request: LoginRequest): CompanyAuthResponse
 }

@@ -36,6 +36,7 @@ private val SubText = Color(0xFF98A0B3)
 fun BountyDetailScreen(
     bountyId: String,
     onNavigateBack: () -> Unit,
+    onBountyClaimed: () -> Unit = {},
     viewModel: BountyDetailViewModel = viewModel()
 ) {
     val bountyDetail by viewModel.bountyDetail.collectAsState()
@@ -53,39 +54,21 @@ fun BountyDetailScreen(
         if (claimSuccess) {
             showClaimDialog = false
             viewModel.resetClaimSuccess()
+            // Notify parent that bounty was claimed
+            onBountyClaimed()
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Bounty Details", color = TitleColor) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = TitleColor
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = CardBackground
-                )
-            )
-        },
-        containerColor = Background
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when {
-                isLoading && bountyDetail == null -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = AccentBlue
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background)
+    ) {
+        when {
+            isLoading && bountyDetail == null -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = AccentBlue
                     )
                 }
                 error != null && bountyDetail == null -> {
@@ -328,7 +311,6 @@ fun BountyDetailScreen(
                 }
             }
         }
-    }
 
     // Claim Confirmation Dialog
     if (showClaimDialog) {

@@ -9,7 +9,7 @@ object TokenManager {
     private const val KEY_USER_ID = "user_id"
     private const val KEY_USERNAME = "username"
     private const val KEY_EMAIL = "email"
-    private const val KEY_ACCOUNT_TYPE = "account_type" // USER or COMPANY
+    private const val KEY_ROLE = "role"
 
     private lateinit var prefs: SharedPreferences
 
@@ -17,7 +17,10 @@ object TokenManager {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     }
 
-    fun saveToken(token: String) {
+    fun saveToken(token: String?) {
+        if (token.isNullOrBlank()) {
+            throw IllegalArgumentException("Token cannot be null or empty")
+        }
         prefs.edit().putString(KEY_TOKEN, token).apply()
     }
 
@@ -25,12 +28,12 @@ object TokenManager {
         return prefs.getString(KEY_TOKEN, null)
     }
 
-    fun saveUserData(id: Int, username: String, email: String, accountType: String) {
+    fun saveUserData(id: Int, username: String?, email: String, role: String) {
         prefs.edit().apply {
             putInt(KEY_USER_ID, id)
-            putString(KEY_USERNAME, username)
+            putString(KEY_USERNAME, username ?: email.substringBefore("@"))  // Use email prefix if username is null
             putString(KEY_EMAIL, email)
-            putString(KEY_ACCOUNT_TYPE, accountType) // "USER" or "COMPANY"
+            putString(KEY_ROLE, role)
             apply()
         }
     }
@@ -43,22 +46,6 @@ object TokenManager {
         return prefs.getString(KEY_USERNAME, null)
     }
 
-    fun getEmail(): String? {
-        return prefs.getString(KEY_EMAIL, null)
-    }
-
-    fun getAccountType(): String? {
-        return prefs.getString(KEY_ACCOUNT_TYPE, null)
-    }
-
-    fun isUser(): Boolean {
-        return getAccountType() == "USER"
-    }
-
-    fun isCompany(): Boolean {
-        return getAccountType() == "COMPANY"
-    }
-
     fun isLoggedIn(): Boolean {
         return getToken() != null
     }
@@ -67,6 +54,4 @@ object TokenManager {
         prefs.edit().clear().apply()
     }
 }
-
-
 
