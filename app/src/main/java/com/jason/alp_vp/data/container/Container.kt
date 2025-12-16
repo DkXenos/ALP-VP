@@ -9,7 +9,7 @@ class AppContainer {
 
     companion object {
         // TODO: Replace with your actual backend IP address
-        const val BASE_URL = "http://192.168.68.105:3000"
+        const val BASE_URL = "http://192.168.30.108:3000/api"
     }
 
     private val gson = GsonBuilder()
