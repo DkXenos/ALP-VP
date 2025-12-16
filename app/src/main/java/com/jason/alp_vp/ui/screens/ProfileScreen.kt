@@ -402,6 +402,8 @@ private fun ProfileHeader(username: String, email: String, role: String) {
 
 @Composable
 private fun StatsCard(stats: ProfileStats) {
+    val levelInfo = com.jason.alp_vp.utils.XpLevelCalculator.calculateLevel(stats.totalXpEarned)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -410,6 +412,7 @@ private fun StatsCard(stats: ProfileStats) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
+            // Header
             Text(
                 text = "Statistics",
                 color = TitleColor,
@@ -417,9 +420,71 @@ private fun StatsCard(stats: ProfileStats) {
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Stats Grid
+            // XP Level Section with Progress Bar
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(AccentBlue.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Level ${levelInfo.level}",
+                            color = AccentBlue,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Total XP: ${NumberFormat.getNumberInstance().format(stats.totalXpEarned)}",
+                            color = SubText,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    // XP to next level
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "${levelInfo.currentLevelXp} / ${levelInfo.xpForNextLevel}",
+                            color = TitleColor,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "${(levelInfo.progressPercent * 100).toInt()}% to next level",
+                            color = SubText,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Progress Bar
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(levelInfo.progressPercent)
+                            .height(8.dp)
+                            .background(AccentBlue, RoundedCornerShape(4.dp))
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Activity Stats Grid
             Row(modifier = Modifier.fillMaxWidth()) {
                 StatItem(
                     label = "Posts",
@@ -439,7 +504,37 @@ private fun StatsCard(stats: ProfileStats) {
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            Divider(color = SubText.copy(alpha = 0.2f))
+            HorizontalDivider(color = SubText.copy(alpha = 0.2f))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Bounty Progress
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Active", color = SubText, fontSize = 12.sp)
+                    Text(
+                        text = stats.activeBounties.toString(),
+                        color = Color(0xFFFFA500),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Completed", color = SubText, fontSize = 12.sp)
+                    Text(
+                        text = stats.completedBounties.toString(),
+                        color = AccentGreen,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = SubText.copy(alpha = 0.2f))
             Spacer(modifier = Modifier.height(16.dp))
 
             // Earnings
@@ -448,22 +543,30 @@ private fun StatsCard(stats: ProfileStats) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text(text = "Total XP", color = SubText, fontSize = 12.sp)
-                    Text(
-                        text = NumberFormat.getNumberInstance().format(stats.totalXpEarned),
-                        color = AccentBlue,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "XP Earned", color = SubText, fontSize = 12.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "⭐", fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = NumberFormat.getNumberInstance().format(stats.totalXpEarned),
+                            color = AccentBlue,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "Total Earnings", color = SubText, fontSize = 12.sp)
-                    Text(
-                        text = "Rp ${NumberFormat.getNumberInstance(Locale("id", "ID")).format(stats.totalMoneyEarned)}",
-                        color = AccentGreen,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "Money Earned", color = SubText, fontSize = 12.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "💰", fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Rp ${NumberFormat.getNumberInstance(Locale("id", "ID")).format(stats.totalMoneyEarned)}",
+                            color = AccentGreen,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
