@@ -30,6 +30,7 @@ import com.jason.alp_vp.ui.screens.LoginScreen
 import com.jason.alp_vp.ui.screens.ProfileScreen
 import com.jason.alp_vp.ui.screens.RegisterScreen
 import com.jason.alp_vp.ui.view.*
+import com.jason.alp_vp.ui.view.HomePage
 import com.jason.alp_vp.ui.viewmodel.ForumPageViewModel
 
 data class BottomNavItem(
@@ -122,12 +123,7 @@ fun AppRoute() {
             }
 
             composable(AppView.Forum.name) {
-                ForumPage(
-                    onNavigateToEventPage = { navController.navigate(AppView.Events.name) },
-                    onNavigateToPostPage = { navController.navigate(AppView.Posts.name) },
-                    onNavigateToPostDetail = { postId ->
-                        navController.navigate("${AppView.PostDetail.name}/$postId")
-                    },
+                HomePage(
                     onNavigateToBountyDetail = { bountyId ->
                         navController.navigate("bounty_detail/$bountyId")
                     }
@@ -135,8 +131,9 @@ fun AppRoute() {
             }
 
             composable(AppView.Posts.name) {
-                PostPage(
-                    onBack = { navController.popBackStack() },
+                ForumPage(
+                    onNavigateToEventPage = { navController.navigate(AppView.Events.name) },
+                    onNavigateToPostPage = { /* Already on posts */ },
                     onNavigateToPostDetail = { postId ->
                         navController.navigate("${AppView.PostDetail.name}/$postId")
                     }
