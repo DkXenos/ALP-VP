@@ -13,15 +13,22 @@ import java.util.concurrent.TimeUnit
  *
  * This container manages:
  * - Retrofit configuration with JWT authentication
- * - Service instantiation (lazy initialization)
+ * - Service instantiation (lazy initialization - private)
+ * - Repository instantiation (lazy initialization - public)
  * - Network logging and timeouts
+ *
+ * MVVM Architecture:
+ * Backend API ← Service (private) ← Repository (public) ← ViewModel ← UI
  *
  * Usage in ViewModel:
  * ```
- * class MyViewModel(
+ * class ProfileViewModel(
  *     private val container: AppContainer = AppContainer()
  * ) : ViewModel() {
- *     private val service = container.myService
+ *     private val profileRepository = container.profileRepository  // ✅ CORRECT
+ *
+ *     // ❌ WRONG: private val profileService = container.profileService
+ *     // Never access services directly - use repositories!
  * }
  * ```
  */
@@ -73,48 +80,82 @@ class AppContainer {
             .build()
     }
 
-    // ===== Services (Lazy Initialization) =====
+    // ===== Services (Lazy Initialization - Private) =====
+    // Services should NOT be accessed directly by ViewModels.
+    // Always use the Repository layer for proper separation of concerns.
 
-    val profileService: ProfileService by lazy {
+    private val profileService: ProfileService by lazy {
         retrofit.create(ProfileService::class.java)
     }
 
-    val bountyService: BountyService by lazy {
+    private val bountyService: BountyService by lazy {
         retrofit.create(BountyService::class.java)
     }
 
-    val authService: AuthApi by lazy {
+    private val authService: AuthApi by lazy {
         retrofit.create(AuthApi::class.java)
     }
 
-    val postService: PostService by lazy {
+    private val postService: PostService by lazy {
         retrofit.create(PostService::class.java)
     }
 
-    val commentService: CommentService by lazy {
+    private val commentService: CommentService by lazy {
         retrofit.create(CommentService::class.java)
     }
 
-    val eventService: EventService by lazy {
+    private val eventService: EventService by lazy {
         retrofit.create(EventService::class.java)
     }
 
-    val voteService: VoteService by lazy {
+    private val voteService: VoteService by lazy {
         retrofit.create(VoteService::class.java)
     }
 
-    val companyService: CompanyService by lazy {
+    private val companyService: CompanyService by lazy {
         retrofit.create(CompanyService::class.java)
     }
 
-    // ===== Repositories (Lazy Initialization) =====
+    // ===== Repositories (Lazy Initialization - Public) =====
+    // ViewModels should ONLY access these repositories.
+    // Repositories handle business logic, error handling, and data transformation.
 
+    /**
+     * ProfileRepository - Manages user profile data
+     * Used in: ProfileViewModel, HomeViewModel
+     */
+    val profileRepository: com.jason.alp_vp.data.repository.ProfileRepository by lazy {
+        com.jason.alp_vp.data.repository.ProfileRepository(profileService)
+    }
+
+    /**
+     * BountyRepository - Manages bounty operations
+     * Used in: BountyListViewModel, BountyDetailViewModel, ProfileViewModel
+     */
+    val bountyRepository: com.jason.alp_vp.data.repository.BountyRepository by lazy {
+        com.jason.alp_vp.data.repository.BountyRepository(bountyService)
+    }
+
+    /**
+     * VoteRepository - Manages voting on comments
+     * Used in: CommentViewModel, PostDetailViewModel
+     */
     val voteRepository: com.jason.alp_vp.data.repository.VoteRepository by lazy {
         com.jason.alp_vp.data.repository.VoteRepository(voteService)
     }
 
+    /**
+     * CommentRepository - Manages comments on posts
+     * Used in: CommentViewModel, PostDetailViewModel, HomeViewModel
+     */
     val commentRepository: com.jason.alp_vp.data.repository.CommentRepository by lazy {
         com.jason.alp_vp.data.repository.CommentRepository(commentService)
     }
+
+    // TODO: Add remaining repositories as they are created:
+    // - AuthRepository (for login, register, logout)
+    // - PostRepository (for creating, updating, deleting posts)
+    // - EventRepository (for event registration and management)
+    // - CompanyRepository (for company-specific operations)
 }
 
