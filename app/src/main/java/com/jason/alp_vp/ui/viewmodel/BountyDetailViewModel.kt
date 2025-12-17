@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.jason.alp_vp.data.container.AppContainer
 import com.jason.alp_vp.data.service.Applicant
 import com.jason.alp_vp.data.service.BountyItem
-import com.jason.alp_vp.data.service.SubmitWorkRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -15,7 +14,8 @@ class BountyDetailViewModel(
     private val container: AppContainer = AppContainer()
 ) : ViewModel() {
 
-    private val bountyService = container.bountyService
+    // ✅ CORRECT: Use repository instead of service
+    private val bountyRepository = container.bountyRepository
 
     private val _bountyDetail = MutableStateFlow<BountyItem?>(null)
     val bountyDetail = _bountyDetail.asStateFlow()
@@ -44,18 +44,13 @@ class BountyDetailViewModel(
             _error.value = null
             try {
                 Log.d("BountyDetailViewModel", "Loading bounty detail: $bountyId")
-                val response = bountyService.getBountyById(bountyId)
-
-                if (response.isSuccessful && response.body() != null) {
-                    _bountyDetail.value = response.body()!!.data
-                    Log.d("BountyDetailViewModel", "Bounty loaded: ${response.body()!!.data}")
-                } else {
-                    val errorMsg = "Failed to load bounty: ${response.code()} - ${response.message()}"
-                    Log.e("BountyDetailViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository - it handles error checking and validation
+                val response = bountyRepository.getBountyById(bountyId)
+                _bountyDetail.value = response.data
+                Log.d("BountyDetailViewModel", "Bounty loaded: ${response.data}")
             } catch (e: Exception) {
-                val errorMsg = "Error loading bounty: ${e.message}"
+                // Repository provides user-friendly error messages
+                val errorMsg = e.message ?: "Error loading bounty"
                 Log.e("BountyDetailViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {
@@ -70,20 +65,15 @@ class BountyDetailViewModel(
             _error.value = null
             try {
                 Log.d("BountyDetailViewModel", "Claiming bounty: $bountyId")
-                val response = bountyService.claimBounty(bountyId)
-
-                if (response.isSuccessful) {
-                    Log.d("BountyDetailViewModel", "Bounty claimed successfully")
-                    _claimSuccess.value = true
-                    // Reload bounty to get updated status
-                    loadBountyDetail(bountyId)
-                } else {
-                    val errorMsg = "Failed to claim bounty: ${response.code()} - ${response.message()}"
-                    Log.e("BountyDetailViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository - it validates input and provides user-friendly errors
+                bountyRepository.claimBounty(bountyId)
+                Log.d("BountyDetailViewModel", "Bounty claimed successfully")
+                _claimSuccess.value = true
+                // Reload bounty to get updated status
+                loadBountyDetail(bountyId)
             } catch (e: Exception) {
-                val errorMsg = "Error claiming bounty: ${e.message}"
+                // Repository provides user-friendly error messages like "This bounty is already claimed"
+                val errorMsg = e.message ?: "Error claiming bounty"
                 Log.e("BountyDetailViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {
@@ -98,21 +88,20 @@ class BountyDetailViewModel(
             _error.value = null
             try {
                 Log.d("BountyDetailViewModel", "Submitting work for bounty: $bountyId")
-                val request = SubmitWorkRequest(submissionUrl, submissionNotes)
-                val response = bountyService.submitWork(bountyId, request)
-
-                if (response.isSuccessful) {
-                    Log.d("BountyDetailViewModel", "Work submitted successfully")
-                    _submitSuccess.value = true
-                    // Reload bounty to get updated submission status
-                    loadBountyDetail(bountyId)
-                } else {
-                    val errorMsg = "Failed to submit work: ${response.code()} - ${response.message()}"
-                    Log.e("BountyDetailViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository - it validates URL format and provides user-friendly errors
+                bountyRepository.submitWork(bountyId, submissionUrl, submissionNotes)
+                Log.d("BountyDetailViewModel", "Work submitted successfully")
+                _submitSuccess.value = true
+                // Reload bounty to get updated submission status
+                loadBountyDetail(bountyId)
+            } catch (e: IllegalArgumentException) {
+                // Validation error (e.g., invalid URL format)
+                val errorMsg = e.message ?: "Invalid submission"
+                Log.e("BountyDetailViewModel", "Validation error: $errorMsg", e)
+                _error.value = errorMsg
             } catch (e: Exception) {
-                val errorMsg = "Error submitting work: ${e.message}"
+                // Network error
+                val errorMsg = e.message ?: "Error submitting work"
                 Log.e("BountyDetailViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {
@@ -127,18 +116,13 @@ class BountyDetailViewModel(
             _error.value = null
             try {
                 Log.d("BountyDetailViewModel", "Loading applicants for bounty: $bountyId")
-                val response = bountyService.getBountyApplicants(bountyId)
-
-                if (response.isSuccessful && response.body() != null) {
-                    _applicants.value = response.body()!!.data
-                    Log.d("BountyDetailViewModel", "Applicants loaded: ${response.body()!!.data.size}")
-                } else {
-                    val errorMsg = "Failed to load applicants: ${response.code()} - ${response.message()}"
-                    Log.e("BountyDetailViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository - it provides user-friendly error for non-companies
+                val response = bountyRepository.getBountyApplicants(bountyId)
+                _applicants.value = response.data
+                Log.d("BountyDetailViewModel", "Applicants loaded: ${response.data.size}")
             } catch (e: Exception) {
-                val errorMsg = "Error loading applicants: ${e.message}"
+                // Repository provides user-friendly error messages like "Only companies can view applicants"
+                val errorMsg = e.message ?: "Error loading applicants"
                 Log.e("BountyDetailViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {
@@ -153,21 +137,16 @@ class BountyDetailViewModel(
             _error.value = null
             try {
                 Log.d("BountyDetailViewModel", "Selecting winner: User $userId for bounty $bountyId")
-                val response = bountyService.selectWinner(bountyId, userId)
-
-                if (response.isSuccessful) {
-                    Log.d("BountyDetailViewModel", "Winner selected successfully: ${response.body()!!.data}")
-                    _winnerSelected.value = true
-                    // Reload bounty and applicants to reflect winner status
-                    loadBountyDetail(bountyId)
-                    loadApplicants(bountyId)
-                } else {
-                    val errorMsg = "Failed to select winner: ${response.code()} - ${response.message()}"
-                    Log.e("BountyDetailViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository - it validates input and provides user-friendly errors
+                bountyRepository.selectWinner(bountyId, userId)
+                Log.d("BountyDetailViewModel", "Winner selected successfully")
+                _winnerSelected.value = true
+                // Reload bounty and applicants to reflect winner status
+                loadBountyDetail(bountyId)
+                loadApplicants(bountyId)
             } catch (e: Exception) {
-                val errorMsg = "Error selecting winner: ${e.message}"
+                // Repository provides user-friendly error messages like "Only companies can select winners"
+                val errorMsg = e.message ?: "Error selecting winner"
                 Log.e("BountyDetailViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {

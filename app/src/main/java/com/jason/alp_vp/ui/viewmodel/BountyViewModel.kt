@@ -14,7 +14,7 @@ class BountyViewModel(
     private val container: AppContainer = AppContainer()
 ) : ViewModel() {
 
-    private val bountyService = container.bountyService
+    private val bountyRepository = container.bountyRepository
 
     private val _bounties = MutableStateFlow<List<Bounty>>(emptyList())
     val bounties = _bounties.asStateFlow()
@@ -38,19 +38,13 @@ class BountyViewModel(
             _error.value = null
             try {
                 Log.d("BountyViewModel", "Loading all bounties...")
-                val response = bountyService.getAllBounties()
-
-                if (response.isSuccessful && response.body() != null) {
-                    val bountiesResponse = response.body()!!
-                    Log.d("BountyViewModel", "Loaded ${bountiesResponse.data.size} bounties")
-                    _bounties.value = bountiesResponse.data.map { it.toUiModel() }
-                } else {
-                    val errorMsg = "Failed to load bounties: ${response.code()} - ${response.message()}"
-                    Log.e("BountyViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository - it handles error checking and validation
+                val response = bountyRepository.getAllBounties()
+                Log.d("BountyViewModel", "Loaded ${response.data.size} bounties")
+                _bounties.value = response.data.map { it.toUiModel() }
             } catch (e: Exception) {
-                val errorMsg = "Error loading bounties: ${e.message}"
+                // Repository provides user-friendly error messages
+                val errorMsg = e.message ?: "Error loading bounties"
                 Log.e("BountyViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {
@@ -65,19 +59,12 @@ class BountyViewModel(
             _error.value = null
             try {
                 Log.d("BountyViewModel", "Loading my bounties...")
-                val response = bountyService.getMyClaimedBounties()
-
-                if (response.isSuccessful && response.body() != null) {
-                    val myBountiesResponse = response.body()!!
-                    Log.d("BountyViewModel", "Loaded ${myBountiesResponse.data.size} claimed bounties")
-                    _myBounties.value = myBountiesResponse.data.map { it.toUiModel() }
-                } else {
-                    val errorMsg = "Failed to load my bounties: ${response.code()}"
-                    Log.e("BountyViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository
+                val response = bountyRepository.getMyClaimedBounties()
+                Log.d("BountyViewModel", "Loaded ${response.data.size} claimed bounties")
+                _myBounties.value = response.data.map { it.toUiModel() }
             } catch (e: Exception) {
-                val errorMsg = "Error loading my bounties: ${e.message}"
+                val errorMsg = e.message ?: "Error loading my bounties"
                 Log.e("BountyViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {
@@ -92,20 +79,14 @@ class BountyViewModel(
             _error.value = null
             try {
                 Log.d("BountyViewModel", "Claiming bounty $bountyId...")
-                val response = bountyService.claimBounty(bountyId)
-
-                if (response.isSuccessful) {
-                    Log.d("BountyViewModel", "Successfully claimed bounty $bountyId")
-                    // Reload bounties to reflect the change
-                    loadAllBounties()
-                    loadMyBounties()
-                } else {
-                    val errorMsg = "Failed to claim bounty: ${response.code()}"
-                    Log.e("BountyViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository - it validates and provides user-friendly errors
+                bountyRepository.claimBounty(bountyId)
+                Log.d("BountyViewModel", "Successfully claimed bounty $bountyId")
+                // Reload bounties to reflect the change
+                loadAllBounties()
+                loadMyBounties()
             } catch (e: Exception) {
-                val errorMsg = "Error claiming bounty: ${e.message}"
+                val errorMsg = e.message ?: "Error claiming bounty"
                 Log.e("BountyViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {
@@ -120,20 +101,14 @@ class BountyViewModel(
             _error.value = null
             try {
                 Log.d("BountyViewModel", "Unclaiming bounty $bountyId...")
-                val response = bountyService.unclaimBounty(bountyId)
-
-                if (response.isSuccessful) {
-                    Log.d("BountyViewModel", "Successfully unclaimed bounty $bountyId")
-                    // Reload bounties to reflect the change
-                    loadAllBounties()
-                    loadMyBounties()
-                } else {
-                    val errorMsg = "Failed to unclaim bounty: ${response.code()}"
-                    Log.e("BountyViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository - it validates and provides user-friendly errors
+                bountyRepository.unclaimBounty(bountyId)
+                Log.d("BountyViewModel", "Successfully unclaimed bounty $bountyId")
+                // Reload bounties to reflect the change
+                loadAllBounties()
+                loadMyBounties()
             } catch (e: Exception) {
-                val errorMsg = "Error unclaiming bounty: ${e.message}"
+                val errorMsg = e.message ?: "Error unclaiming bounty"
                 Log.e("BountyViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {
@@ -148,15 +123,13 @@ class BountyViewModel(
             _error.value = null
             try {
                 Log.d("BountyViewModel", "Loading bounty $bountyId...")
-                val response = bountyService.getBountyById(bountyId)
-
-                if (response.isSuccessful && response.body() != null) {
-                    Log.d("BountyViewModel", "Loaded bounty: ${response.body()!!.data}")
-                } else {
-                    Log.e("BountyViewModel", "Failed to load bounty: ${response.code()}")
-                }
+                // ✅ Use repository
+                val response = bountyRepository.getBountyById(bountyId)
+                Log.d("BountyViewModel", "Loaded bounty: ${response.data}")
             } catch (e: Exception) {
-                Log.e("BountyViewModel", "Error loading bounty: ${e.message}", e)
+                val errorMsg = e.message ?: "Error loading bounty"
+                Log.e("BountyViewModel", errorMsg, e)
+                _error.value = errorMsg
             } finally {
                 _isLoading.value = false
             }
