@@ -14,7 +14,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -39,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 fun PostDetail(
     post: Post,
     replies: List<Comment> = emptyList(),
+    timeAgo: String = "",
     onUpvotePost: (Int) -> Unit = {},
     onDownvotePost: (Int) -> Unit = {},
     onUpvoteReply: (Int) -> Unit = {},
@@ -50,17 +50,6 @@ fun PostDetail(
     // Get author info from post
     val authorName = post.authorName.ifEmpty { "User${post.userId}" }
     val authorInitial = authorName.firstOrNull()?.uppercaseChar()?.toString() ?: "U"
-
-    // Calculate time ago
-    val now = java.time.Instant.now()
-    val duration = java.time.Duration.between(post.createdAt, now)
-    val timeAgo = when {
-        duration.toMinutes() < 1 -> "just now"
-        duration.toMinutes() < 60 -> "${duration.toMinutes()}m ago"
-        duration.toHours() < 24 -> "${duration.toHours()}h ago"
-        duration.toDays() < 7 -> "${duration.toDays()}d ago"
-        else -> "${duration.toDays() / 7}w ago"
-    }
 
     // Calculate votes from comments
     var upvotes = 0
@@ -74,159 +63,160 @@ fun PostDetail(
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF0F1115)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF14161A)),
-                        shape = RoundedCornerShape(12.dp),
-                        elevation = CardDefaults.cardElevation(4.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(RoundedCornerShape(22.dp))
-                                        .background(Color(0xFF2B62FF)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(authorInitial, color = Color.White, fontSize = 16.sp)
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(Color(0xFF0F1115))
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF14161A)),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(22.dp))
+                                    .background(Color(0xFF2B62FF)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(authorInitial, color = Color.White, fontSize = 16.sp)
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(authorName, color = Color.White, fontSize = 16.sp)
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Text(text = timeAgo, color = Color(0xFF98A0B3), fontSize = 12.sp)
                                 }
 
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                        Text(authorName, color = Color.White, fontSize = 16.sp)
-                                        Spacer(modifier = Modifier.weight(1f))
-                                        Text(text = timeAgo, color = Color(0xFF98A0B3), fontSize = 12.sp)
+                                Text(
+                                    text = post.content,
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    maxLines = 6,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // Upvote button
+                                    Button (
+                                        onClick = { onUpvotePost(post.id) },
+                                        colors = ButtonDefaults.buttonColors(Color(0xFF17291E)),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 1.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.KeyboardArrowUp,
+                                            contentDescription = "Upvote",
+                                            tint = Color(0xFF57D06A),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(text = upvotes.toString(), color = Color(0xFF57D06A), fontSize = 13.sp)
                                     }
 
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
 
-                                    Text(
-                                        text = post.content,
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        maxLines = 6,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-
-                                    Spacer(modifier = Modifier.height(12.dp))
-
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        // Upvote button
-                                        Button (
-                                            onClick = { onUpvotePost(post.id) },
-                                            colors = ButtonDefaults.buttonColors(Color(0xFF17291E)),
-                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 1.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.KeyboardArrowUp,
-                                                contentDescription = "Upvote",
-                                                tint = Color(0xFF57D06A),
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(text = upvotes.toString(), color = Color(0xFF57D06A), fontSize = 13.sp)
-                                        }
-
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        // Downvote button
-                                        Button (
-                                            onClick = { onDownvotePost(post.id) },
-                                            colors = ButtonDefaults.buttonColors(Color(0xFF291717)),
-                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 1.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.KeyboardArrowDown,
-                                                contentDescription = "Downvote",
-                                                tint = Color(0xFFFF5C5C),
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(text = downvotes.toString(), color = Color(0xFFFF5C5C), fontSize = 13.sp)
-                                        }
+                                    // Downvote button
+                                    Button (
+                                        onClick = { onDownvotePost(post.id) },
+                                        colors = ButtonDefaults.buttonColors(Color(0xFF291717)),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 1.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.KeyboardArrowDown,
+                                            contentDescription = "Downvote",
+                                            tint = Color(0xFFFF5C5C),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(text = downvotes.toString(), color = Color(0xFFFF5C5C), fontSize = 13.sp)
                                     }
                                 }
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "${replies.size} Replies",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
                 }
 
-                items(replies) { comment ->
-                    ReplyItem(
-                        comment = comment,
-                        authorName = "User${comment.id}",
-                        onUpvote = onUpvoteReply,
-                        onDownvote = onDownvoteReply
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                item { Spacer(modifier = Modifier.height(80.dp)) }
+                Text(
+                    text = "${replies.size} Replies",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
-                    .height(56.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = replyText,
-                    onValueChange = { replyText = it },
-                    placeholder = { Text("Write a reply...", color = Color(0xFFBFC4CC)) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(28.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedContainerColor = Color(0xFF121316),
-                        focusedContainerColor = Color(0xFF121316)
-                    )
+            items(replies) { comment ->
+                ReplyItem(
+                    comment = comment,
+                    authorName = "User${comment.id}",
+                    onUpvote = onUpvoteReply,
+                    onDownvote = onDownvoteReply
                 )
+            }
 
-                Spacer(modifier = Modifier.width(8.dp))
+            item { Spacer(modifier = Modifier.height(80.dp)) }
+        }
 
-                IconButton(onClick = {
-                    if (replyText.isNotBlank()) {
-                        onSendReply(replyText.trim())
-                        replyText = ""
-                    }
-                }, modifier = Modifier.size(48.dp)) {
-                    // send icon circle
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(22.dp))
-                            .background(Color(0xFF2F6BFF)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("→", color = Color.White, fontSize = 18.sp)
-                    }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+                .height(56.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = replyText,
+                onValueChange = { replyText = it },
+                placeholder = { Text("Write a reply...", color = Color(0xFFBFC4CC)) },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                singleLine = true,
+                shape = RoundedCornerShape(28.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedContainerColor = Color(0xFF121316),
+                    focusedContainerColor = Color(0xFF121316)
+                )
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            IconButton(onClick = {
+                if (replyText.isNotBlank()) {
+                    onSendReply(replyText.trim())
+                    replyText = ""
+                }
+            }, modifier = Modifier.size(48.dp)) {
+                // send icon circle
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(Color(0xFF2F6BFF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("→", color = Color.White, fontSize = 18.sp)
                 }
             }
         }
@@ -268,5 +258,15 @@ fun PostDetailPreview() {
         )
     )
 
-    PostDetail(post = post, replies = listOf(r1, r2))
+    // compute preview timeAgo similar to ViewModel
+    val duration = java.time.Duration.between(post.createdAt, now)
+    val previewTimeAgo = when {
+        duration.toMinutes() < 1 -> "just now"
+        duration.toMinutes() < 60 -> "${duration.toMinutes()}m ago"
+        duration.toHours() < 24 -> "${duration.toHours()}h ago"
+        duration.toDays() < 7 -> "${duration.toDays()}d ago"
+        else -> "${duration.toDays() / 7}w ago"
+    }
+
+    PostDetail(post = post, replies = listOf(r1, r2), timeAgo = previewTimeAgo)
 }

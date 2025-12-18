@@ -1,5 +1,6 @@
 package com.jason.alp_vp.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jason.alp_vp.data.container.AppContainer
@@ -38,6 +39,10 @@ class ForumPageViewModel(
     private val _selectedPostReplies = MutableStateFlow<List<Comment>>(emptyList())
     val selectedPostReplies: StateFlow<List<Comment>> = _selectedPostReplies
 
+    // Expose a pre-formatted "time ago" string for the selected post so UI doesn't compute it
+    private val _selectedPostTimeAgo = MutableStateFlow("")
+    val selectedPostTimeAgo: StateFlow<String> = _selectedPostTimeAgo
+
     private val currentUserId = 1 // Mock current user ID
 
     init {
@@ -47,17 +52,31 @@ class ForumPageViewModel(
     private fun loadData() {
         viewModelScope.launch {
             try {
-                // TODO: Load events from backend when EventRepository is ready
-                _events.value = emptyList()
+                // Load events from backend via repository
+                val eventsList = try {
+                    container.eventRepository.getAllEvents()
+                } catch (e: Exception) {
+                    Log.e("ForumPageVM", "Failed to load events", e)
+                    emptyList()
+                }
 
-                // TODO: Load posts from backend when PostRepository is ready
-                _posts.value = emptyList()
+                // Load posts from backend via repository
+                val postsList = try {
+                    container.postRepository.getAllPosts()
+                } catch (e: Exception) {
+                    Log.e("ForumPageVM", "Failed to load posts", e)
+                    emptyList()
+                }
 
-                recomputePostUis(emptyList())
+                _events.value = eventsList
+                _posts.value = postsList
+
+                recomputePostUis(postsList)
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageVM", "Unexpected error while loading data", e)
                 _events.value = emptyList()
                 _posts.value = emptyList()
+                _postUis.value = emptyList()
             }
         }
     }
@@ -146,6 +165,22 @@ class ForumPageViewModel(
             _selectedPost.value = post
             // Load replies dari comments yang ada di post
             _selectedPostReplies.value = post?.comments ?: emptyList()
+            // Compute and set time-ago string for the UI
+            _selectedPostTimeAgo.value = post?.let { computeTimeAgo(it.createdAt) } ?: ""
+        }
+    }
+
+    // Compute a short "time ago" string from a creation Instant (moved from PostDetail)
+    private fun computeTimeAgo(createdAt: Instant): String {
+        val now = Instant.now()
+        val duration = Duration.between(createdAt, now)
+
+        return when {
+            duration.toMinutes() < 1 -> "just now"
+            duration.toMinutes() < 60 -> "${duration.toMinutes()}m ago"
+            duration.toHours() < 24 -> "${duration.toHours()}h ago"
+            duration.toDays() < 7 -> "${duration.toDays()}d ago"
+            else -> "${duration.toDays() / 7}w ago"
         }
     }
 

@@ -43,7 +43,6 @@ fun ForumPage(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Event Posts Section Header
             item {
                 Row(
                     modifier = Modifier

@@ -2,7 +2,6 @@ package com.jason.alp_vp.ui.model
 
 data class User(
     val id: String,
-    val role: String = "user",
     val username: String,
     val email: String,
     val password: String = "",
