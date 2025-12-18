@@ -1,5 +1,6 @@
 package com.jason.alp_vp.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jason.alp_vp.data.container.AppContainer
@@ -51,17 +52,31 @@ class ForumPageViewModel(
     private fun loadData() {
         viewModelScope.launch {
             try {
-                // TODO: Load events from backend when EventRepository is ready
-                _events.value = emptyList()
+                // Load events from backend via repository
+                val eventsList = try {
+                    container.eventRepository.getAllEvents()
+                } catch (e: Exception) {
+                    Log.e("ForumPageVM", "Failed to load events", e)
+                    emptyList()
+                }
 
-                // TODO: Load posts from backend when PostRepository is ready
-                _posts.value = emptyList()
+                // Load posts from backend via repository
+                val postsList = try {
+                    container.postRepository.getAllPosts()
+                } catch (e: Exception) {
+                    Log.e("ForumPageVM", "Failed to load posts", e)
+                    emptyList()
+                }
 
-                recomputePostUis(emptyList())
+                _events.value = eventsList
+                _posts.value = postsList
+
+                recomputePostUis(postsList)
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageVM", "Unexpected error while loading data", e)
                 _events.value = emptyList()
                 _posts.value = emptyList()
+                _postUis.value = emptyList()
             }
         }
     }
