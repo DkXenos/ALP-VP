@@ -3,61 +3,41 @@ package com.jason.alp_vp.data.container
 import com.jason.alp_vp.data.service.*
 import com.jason.alp_vp.utils.TokenManager
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
+import okhttp3.Interceptor
+import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-/**
- * Application Container - Single Source of Truth for Network & Dependency Injection
- *
- * This container manages:
- * - Retrofit configuration with JWT authentication
- * - Service instantiation (lazy initialization)
- * - Network logging and timeouts
- *
- * Usage in ViewModel:
- * ```
- * class MyViewModel(
- *     private val container: AppContainer = AppContainer()
- * ) : ViewModel() {
- *     private val service = container.myService
- * }
- * ```
- */
 class AppContainer {
     companion object {
-        private const val BASE_URL = "http://192.168.30.108:3000/api/"
-    }
-
-    // Logging interceptor for debugging API calls
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        private const val BASE_URL = "http://10.0.2.16:57146/api/"
     }
 
     // OkHttp client with JWT token interceptor
-    private val okHttpClient by lazy {
+    private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
-            .addInterceptor { chain ->
-                val original = chain.request()
-                val requestBuilder = original.newBuilder()
+            .addInterceptor(object : Interceptor {
+                override fun intercept(chain: Interceptor.Chain): Response {
+                    val original = chain.request()
+                    val requestBuilder = original.newBuilder()
 
-                // Add JWT token to all requests if available
-                try {
-                    val token = TokenManager.getToken()
-                    if (token != null) {
-                        requestBuilder.header("Authorization", "Bearer $token")
+                    // Add JWT token to all requests if available
+                    try {
+                        val token = TokenManager.getToken()
+                        if (token != null) {
+                            requestBuilder.header("Authorization", "Bearer $token")
+                        }
+                    } catch (e: UninitializedPropertyAccessException) {
+                        // TokenManager not initialized yet, continue without token
+                    } catch (e: Exception) {
+                        // Any other error, continue without token
                     }
-                } catch (e: UninitializedPropertyAccessException) {
-                    // TokenManager not initialized yet, continue without token
-                } catch (e: Exception) {
-                    // Any other error, continue without token
-                }
 
-                val request = requestBuilder.build()
-                chain.proceed(request)
-            }
+                    val request = requestBuilder.build()
+                    return chain.proceed(request)
+                }
+            })
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
@@ -115,6 +95,18 @@ class AppContainer {
 
     val commentRepository: com.jason.alp_vp.data.repository.CommentRepository by lazy {
         com.jason.alp_vp.data.repository.CommentRepository(commentService)
+    }
+
+    val eventRepository: com.jason.alp_vp.data.repository.EventRepository by lazy {
+        com.jason.alp_vp.data.repository.EventRepository(eventService)
+    }
+
+    val postRepository: com.jason.alp_vp.data.repository.PostRepository by lazy {
+        com.jason.alp_vp.data.repository.PostRepository(postService, commentRepository)
+    }
+
+    val companyRepository: com.jason.alp_vp.data.repository.CompanyRepository by lazy {
+        com.jason.alp_vp.data.repository.CompanyRepository(companyService)
     }
 }
 

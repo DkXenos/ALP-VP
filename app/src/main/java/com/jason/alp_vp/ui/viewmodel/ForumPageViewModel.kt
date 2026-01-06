@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jason.alp_vp.data.container.AppContainer
+import com.jason.alp_vp.data.repository.EventRepository
+import com.jason.alp_vp.data.repository.PostRepository
 import com.jason.alp_vp.ui.model.Event
 import com.jason.alp_vp.ui.model.Post
 import com.jason.alp_vp.ui.model.Comment
@@ -57,7 +59,7 @@ class ForumPageViewModel(
                     container.eventRepository.getAllEvents()
                 } catch (e: Exception) {
                     Log.e("ForumPageVM", "Failed to load events", e)
-                    emptyList()
+                    emptyList<Event>()
                 }
 
                 // Load posts from backend via repository
@@ -65,7 +67,7 @@ class ForumPageViewModel(
                     container.postRepository.getAllPosts()
                 } catch (e: Exception) {
                     Log.e("ForumPageVM", "Failed to load posts", e)
-                    emptyList()
+                    emptyList<Post>()
                 }
 
                 _events.value = eventsList
