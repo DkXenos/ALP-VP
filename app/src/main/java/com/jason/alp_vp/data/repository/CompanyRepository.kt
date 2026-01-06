@@ -90,8 +90,6 @@ class CompanyRepository(private val service: CompanyService) {
         }
     }
 
-    // ========== LOGO IMAGE METHODS (TAMBAHAN) ==========
-
     suspend fun uploadCompanyLogo(imageFile: File): String? {
         val requestBody = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
         val part = MultipartBody.Part.createFormData("logo", imageFile.name, requestBody)

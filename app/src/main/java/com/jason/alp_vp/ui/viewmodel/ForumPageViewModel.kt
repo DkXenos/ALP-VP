@@ -4,11 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jason.alp_vp.data.container.AppContainer
-import com.jason.alp_vp.data.repository.EventRepository
-import com.jason.alp_vp.data.repository.PostRepository
 import com.jason.alp_vp.ui.model.Event
 import com.jason.alp_vp.ui.model.Post
 import com.jason.alp_vp.ui.model.Comment
+import com.jason.alp_vp.utils.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -52,7 +51,14 @@ class ForumPageViewModel(
     private val _errorState = MutableStateFlow<String?>(null)
     val errorState: StateFlow<String?> = _errorState
 
-    private val currentUserId = 1 // Mock current user ID
+    private val currentUserId: Int
+        get() = try {
+            val userId = TokenManager.getUserId()
+            if (userId > 0) userId else 1 // Use 1 as fallback if invalid ID
+        } catch (e: Exception) {
+            Log.e("ForumPageViewModel", "Error getting user ID", e)
+            1 // Fallback user ID
+        }
 
     init {
         loadData()
@@ -127,29 +133,49 @@ class ForumPageViewModel(
 
     fun upvote(postId: Int) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 // Find post and add upvote to first comment
                 val post = _posts.value.find { it.id == postId }
                 post?.comments?.firstOrNull()?.let { comment ->
-                    container.voteRepository.addUpvote(comment.id, currentUserId)
-                    loadData()
+                    val success = container.voteRepository.addUpvote(comment.id, currentUserId)
+                    if (success) {
+                        loadData() // Refresh to get updated vote counts
+                    } else {
+                        _errorState.value = "Failed to add upvote"
+                    }
+                } ?: run {
+                    _errorState.value = "Post or comment not found"
                 }
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageVM", "Error upvoting post", e)
+                _errorState.value = "Error adding upvote: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     fun downvote(postId: Int) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 val post = _posts.value.find { it.id == postId }
                 post?.comments?.firstOrNull()?.let { comment ->
-                    container.voteRepository.addDownvote(comment.id, currentUserId)
-                    loadData()
+                    val success = container.voteRepository.addDownvote(comment.id, currentUserId)
+                    if (success) {
+                        loadData() // Refresh to get updated vote counts
+                    } else {
+                        _errorState.value = "Failed to add downvote"
+                    }
+                } ?: run {
+                    _errorState.value = "Post or comment not found"
                 }
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageVM", "Error downvoting post", e)
+                _errorState.value = "Error adding downvote: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -211,54 +237,90 @@ class ForumPageViewModel(
 
     fun upvotePost(postId: Int) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 val post = _posts.value.find { it.id == postId }
                 post?.comments?.firstOrNull()?.let { comment ->
-                    container.voteRepository.addUpvote(comment.id, currentUserId)
-                    selectPost(postId)
-                    loadData()
+                    val success = container.voteRepository.addUpvote(comment.id, currentUserId)
+                    if (success) {
+                        selectPost(postId)
+                        loadData()
+                    } else {
+                        _errorState.value = "Failed to upvote post"
+                    }
+                } ?: run {
+                    _errorState.value = "Post or comment not found"
                 }
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageVM", "Error upvoting post detail", e)
+                _errorState.value = "Error upvoting post: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     fun downvotePost(postId: Int) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 val post = _posts.value.find { it.id == postId }
                 post?.comments?.firstOrNull()?.let { comment ->
-                    container.voteRepository.addDownvote(comment.id, currentUserId)
-                    selectPost(postId)
-                    loadData()
+                    val success = container.voteRepository.addDownvote(comment.id, currentUserId)
+                    if (success) {
+                        selectPost(postId)
+                        loadData()
+                    } else {
+                        _errorState.value = "Failed to downvote post"
+                    }
+                } ?: run {
+                    _errorState.value = "Post or comment not found"
                 }
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageVM", "Error downvoting post detail", e)
+                _errorState.value = "Error downvoting post: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     fun upvoteReply(commentId: Int) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
-                container.voteRepository.addUpvote(commentId, currentUserId)
-                _selectedPost.value?.let { selectPost(it.id) }
-                loadData()
+                val success = container.voteRepository.addUpvote(commentId, currentUserId)
+                if (success) {
+                    _selectedPost.value?.let { selectPost(it.id) }
+                    loadData()
+                } else {
+                    _errorState.value = "Failed to upvote reply"
+                }
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageVM", "Error upvoting reply", e)
+                _errorState.value = "Error upvoting reply: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     fun downvoteReply(commentId: Int) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
-                container.voteRepository.addDownvote(commentId, currentUserId)
-                _selectedPost.value?.let { selectPost(it.id) }
-                loadData()
+                val success = container.voteRepository.addDownvote(commentId, currentUserId)
+                if (success) {
+                    _selectedPost.value?.let { selectPost(it.id) }
+                    loadData()
+                } else {
+                    _errorState.value = "Failed to downvote reply"
+                }
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageVM", "Error downvoting reply", e)
+                _errorState.value = "Error downvoting reply: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }

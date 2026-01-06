@@ -1,27 +1,27 @@
 package com.jason.alp_vp.data.service
 
-import com.jason.alp_vp.data.dto.comment.CommentRequest
-import com.jason.alp_vp.data.dto.vote.VoteRequest
+import com.jason.alp_vp.data.dto.vote.CreateVoteRequest
+import com.jason.alp_vp.data.dto.vote.CreateVoteResponse
+import com.jason.alp_vp.data.dto.comment.LinkCommentVoteRequest
+import com.jason.alp_vp.data.dto.comment.LinkCommentVoteResponse
 import retrofit2.Response
 import retrofit2.http.*
 
 interface VoteService {
 
-    @POST("/votes")
+    @POST("votes")
     suspend fun createVote(
-        @Body request: VoteRequest,
-        @Header("Authorization") token: String
-    ): Response<VoteResponse>
+        @Body request: CreateVoteRequest
+    ): Response<CreateVoteResponse>
 
-    @POST("/comment-votes")
+    @POST("comment-votes")
     suspend fun linkCommentVote(
-        @Body request: CommentRequest,
-        @Header("Authorization") token: String
-    ): Response<Unit>
-}
+        @Body request: LinkCommentVoteRequest
+    ): Response<LinkCommentVoteResponse>
 
-data class VoteResponse(
-    val id: Int,
-    val vote_type: String
-)
+    @DELETE("votes/{id}")
+    suspend fun deleteVote(
+        @Path("id") voteId: Int
+    ): Response<LinkCommentVoteResponse>
+}
 

@@ -86,7 +86,6 @@ class UserRepository(private val service: UserService) {
         }
     }
 
-    // ========== PROFILE IMAGE METHODS ==========
 
     suspend fun uploadProfileImage(imageFile: File): String? {
         val requestBody = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
