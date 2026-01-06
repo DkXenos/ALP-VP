@@ -1,9 +1,10 @@
 package com.jason.alp_vp.data.container
 
+import com.jason.alp_vp.data.repository.UserRepository
 import com.jason.alp_vp.data.repository.CommentRepository
-import com.jason.alp_vp.data.repository.CompanyRepository
 import com.jason.alp_vp.data.repository.EventRepository
 import com.jason.alp_vp.data.repository.PostRepository
+import com.jason.alp_vp.data.repository.CompanyRepository
 import com.jason.alp_vp.data.repository.VoteRepository
 import com.jason.alp_vp.data.service.*
 import com.jason.alp_vp.utils.TokenManager

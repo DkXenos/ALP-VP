@@ -80,9 +80,6 @@ fun CompanyProfileView(
                     CompanyProfileHeader(
                         companyName = company.name,
                         walletBalance = walletBalance,
-                        profileImageUrl = company.logo, // Safe handling of profile image
-                        onUploadImage = { imageBytes -> viewModel.uploadProfileImage(imageBytes) },
-                        onDeleteImage = { viewModel.deleteProfileImage() },
                         onLogout = {
                             viewModel.logout()
                             onLogout()

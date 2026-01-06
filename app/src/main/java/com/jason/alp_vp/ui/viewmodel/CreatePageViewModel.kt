@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.Instant
+import java.util.Locale
 
 enum class CreateType {
     BOUNTY,
@@ -129,16 +129,6 @@ class CreatePageViewModel : ViewModel() {
                 kotlinx.coroutines.delay(1500)
 
                 // Create bounty (dummy data - replace with actual API call)
-                val newBounty = mapOf(
-                    "id" to "bounty_${System.currentTimeMillis()}",
-                    "title" to form.title,
-                    "company" to currentCompanyId,
-                    "deadline" to form.deadline,
-                    "rewardXp" to rewardXp,
-                    "rewardMoney" to rewardMoney,
-                    "status" to "active",
-                    "description" to form.description
-                )
 
                 // Deduct wallet balance
                 _walletBalance.value -= rewardMoney
@@ -146,7 +136,7 @@ class CreatePageViewModel : ViewModel() {
                 // Reset form
                 _bountyFormData.value = BountyFormData()
 
-                _successMessage.value = "Bounty created successfully! Rp ${String.format("%,.2f", rewardMoney)} deducted from wallet."
+                _successMessage.value = "Bounty created successfully! Rp ${String.format(Locale.getDefault(), "%,.2f", rewardMoney)} deducted from wallet."
 
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to create bounty: ${e.message}"
@@ -195,14 +185,7 @@ class CreatePageViewModel : ViewModel() {
                 kotlinx.coroutines.delay(1500)
 
                 // Create event (dummy data - replace with actual API call)
-                val newEvent = mapOf(
-                    "id" to "event_${System.currentTimeMillis()}",
-                    "title" to form.title,
-                    "description" to form.description,
-                    "event_date" to form.eventDate,
-                    "company_id" to currentCompanyId,
-                    "registered_quota" to quota
-                )
+                // TODO: Replace with actual API call when backend is ready
 
                 // Reset form
                 _eventFormData.value = EventFormData()

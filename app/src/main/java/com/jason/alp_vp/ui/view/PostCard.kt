@@ -2,10 +2,9 @@
 package com.jason.alp_vp.ui.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,57 +32,69 @@ fun PostCard(
     onClick: () -> Unit = {}
 ) {
     val tag = remember(id) { "post_$id" }
-    val hoursAgo = Duration.between(createdAt, Instant.now()).toHours()
+    val timeAgo = remember(createdAt) {
+        val duration = Duration.between(createdAt, Instant.now())
+        when {
+            duration.toMinutes() < 1 -> "just now"
+            duration.toMinutes() < 60 -> "${duration.toMinutes()}m ago"
+            duration.toHours() < 24 -> "${duration.toHours()}h ago"
+            duration.toDays() < 7 -> "${duration.toDays()}d ago"
+            else -> "${duration.toDays() / 7}w ago"
+        }
+    }
 
-    Card(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF14161A)),
-        elevation = CardDefaults.cardElevation(4.dp),
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .testTag(tag)
+            .background(Color(0xFF14161A), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .testTag(tag),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(Color(0xFF2B62FF))
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(Color(0xFF2B62FF))
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = content,
+                color = Color.White,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 14.sp
             )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = content, color = Color.White, maxLines = 3, overflow = TextOverflow.Ellipsis, fontSize = 14.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onUpvote) {
-                        Text("▲", color = Color(0xFF57D06A), fontSize = 16.sp)
-                    }
-                    Text(text = upvoteCount.toString(), color = Color(0xFF98A0B3), fontSize = 13.sp)
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    IconButton(onClick = onDownvote) {
-                        Text("▼", color = Color(0xFFF85C5C), fontSize = 16.sp)
-                    }
-                    Text(text = downvoteCount.toString(), color = Color(0xFF98A0B3), fontSize = 13.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onUpvote) {
+                    Text("▲", color = Color(0xFF57D06A), fontSize = 16.sp)
                 }
+                Text(text = upvoteCount.toString(), color = Color(0xFF98A0B3), fontSize = 13.sp)
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                IconButton(onClick = onDownvote) {
+                    Text("▼", color = Color(0xFFF85C5C), fontSize = 16.sp)
+                }
+                Text(text = downvoteCount.toString(), color = Color(0xFF98A0B3), fontSize = 13.sp)
             }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(text = "${hoursAgo}h", color = Color(0xFF98A0B3), fontSize = 12.sp)
         }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(text = timeAgo, color = Color(0xFF98A0B3), fontSize = 12.sp)
     }
 }
 
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 @Composable
 fun PostCardPreview() {
-    val now = java.time.Instant.now()
+        val now = Instant.now()
     PostCard(
         id = 1,
         content = "Just completed a small refactor to improve the UI responsiveness. Here's a longer sample content to exercise the ellipsis truncation.",

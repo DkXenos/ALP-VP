@@ -6,11 +6,11 @@ import retrofit2.http.*
 
 interface BountyService {
 
-    // 1. Get All Bounties (Public)
+    // 1. Get All Bounties - AUTH via interceptor
     @GET("bounties")
     suspend fun getAllBounties(): Response<BountiesResponse>
 
-    // 2. Get Bounty by ID (Public)
+    // 2. Get Bounty by ID - AUTH via interceptor
     @GET("bounties/{id}")
     suspend fun getBountyById(
         @Path("id") id: String
@@ -22,40 +22,58 @@ interface BountyService {
         @Body request: BountyCreateDto
     ): Response<BountyDetailResponse>
 
-    // 4. Assign Bounty to User (Claim) - AUTH via interceptor
-    @POST("bounties/{id}/assign")
-    suspend fun assignBounty(
-        @Path("id") bountyId: String,
-        @Body request: BountyAssignDto
+    // 4. Claim Bounty (User) - AUTH via interceptor
+    @POST("bounties/{id}/claim")
+    suspend fun claimBounty(
+        @Path("id") bountyId: String
     ): Response<AssignBountyResponse>
 
-    // 5. Submit Work (User only) - AUTH via interceptor
+    // 5. Unclaim Bounty (User) - AUTH via interceptor
+    @DELETE("bounties/{id}/unclaim")
+    suspend fun unclaimBounty(
+        @Path("id") bountyId: String
+    ): Response<AssignBountyResponse>
+
+    // 6. Submit Work (User only) - AUTH via interceptor
     @POST("bounties/{id}/submit")
     suspend fun submitBounty(
         @Path("id") bountyId: String,
         @Body request: BountySubmitDto
     ): Response<SubmitBountyResponse>
 
-    // 6. Get User's Claimed Bounties - AUTH via interceptor
-    @GET("users/me/bounties")
-    suspend fun getMyClaimedBounties(): Response<MyBountiesResponse>
+    // 7. Get My Bounties (User) - AUTH via interceptor
+    @GET("my-bounties")
+    suspend fun getMyBounties(): Response<MyBountiesResponse>
 
-    // 7. Get Company's Created Bounties - AUTH via interceptor
-    @GET("companies/me/bounties")
+    // 8. Select Winner (Company) - AUTH via interceptor
+    @POST("bounties/{id}/select-winner/{userId}")
+    suspend fun selectWinner(
+        @Path("id") bountyId: String,
+        @Path("userId") userId: String
+    ): Response<BountyDetailResponse>
+
+    // 9. Get Company Bounties - AUTH via interceptor
+    @GET("company/my-bounties")
     suspend fun getCompanyBounties(): Response<BountiesResponse>
 
-    // 8. Delete Bounty (Company only) - AUTH via interceptor
-    @DELETE("bounties/{id}")
-    suspend fun deleteBounty(
-        @Path("id") id: String
-    ): Response<DeleteBountyResponse>
+    // 10. Get Bounty Applicants (Company) - AUTH via interceptor
+    @GET("bounties/{id}/applicants")
+    suspend fun getBountyApplicants(
+        @Path("id") bountyId: String
+    ): Response<BountyApplicantsResponse>
 
-    // 9. Update Bounty Status/Winner (Company) - AUTH via interceptor
+    // 11. Update Bounty (Company) - AUTH via interceptor
     @PUT("bounties/{id}")
     suspend fun updateBounty(
         @Path("id") id: String,
         @Body request: UpdateBountyRequest
     ): Response<BountyDetailResponse>
+
+    // 12. Delete Bounty (Company only) - AUTH via interceptor
+    @DELETE("bounties/{id}")
+    suspend fun deleteBounty(
+        @Path("id") id: String
+    ): Response<DeleteBountyResponse>
 }
 
 // ============= REQUEST DTOs =============
@@ -70,11 +88,6 @@ data class BountyCreateDto(
     val status: String = "open" // open, in_progress, completed, cancelled
 )
 
-data class BountyAssignDto(
-    val user_id: Int,
-    val bounty_id: String
-)
-
 data class BountySubmitDto(
     val user_id: Int,
     val bounty_id: String,
@@ -82,6 +95,7 @@ data class BountySubmitDto(
     val submission_url: String? = null,
     val submission_notes: String? = null
 )
+
 
 data class UpdateBountyRequest(
     val title: String? = null,
@@ -167,6 +181,11 @@ data class MyBountiesResponse(
     val data: List<MyBountyItem>
 )
 
+data class BountyApplicantsResponse(
+    val success: Boolean,
+    val data: List<BountyAssignmentItem>
+)
+
 data class MyBountyItem(
     val bounty_id: String,
     val title: String,
@@ -193,8 +212,8 @@ data class DeleteBountyResponse(
 
 // ============= UI MODEL MAPPING =============
 
-fun BountyItem.toUiModel(): com.jason.alp_vp.ui.model.Bounty {
-    return com.jason.alp_vp.ui.model.Bounty(
+fun BountyItem.toUiModel(): Bounty {
+    return Bounty(
         id = this.id,
         title = this.title,
         company = this.company?.name ?: "Unknown Company",
@@ -208,8 +227,8 @@ fun BountyItem.toUiModel(): com.jason.alp_vp.ui.model.Bounty {
     )
 }
 
-fun MyBountyItem.toUiModel(): com.jason.alp_vp.ui.model.Bounty {
-    return com.jason.alp_vp.ui.model.Bounty(
+fun MyBountyItem.toUiModel(): Bounty {
+    return Bounty(
         id = this.bounty_id,
         title = this.title,
         company = this.company?.name ?: "Unknown Company",

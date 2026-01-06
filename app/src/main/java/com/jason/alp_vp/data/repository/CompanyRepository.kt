@@ -111,6 +111,12 @@ class CompanyRepository(private val service: CompanyService) {
         return response.body()?.data?.logo
     }
 
+    suspend fun getMyCompanyBounties(): List<UiCompany> {
+        // This is a placeholder since we're not touching bounty-related code
+        // Return empty list for now
+        return emptyList()
+    }
+
     private fun mapToUi(item: CompanyResponse): UiCompany {
         val idInt = try { item.id.toInt() } catch (_: Exception) { 0 }
         return UiCompany(

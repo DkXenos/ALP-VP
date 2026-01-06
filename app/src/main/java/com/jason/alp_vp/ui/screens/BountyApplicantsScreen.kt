@@ -1,6 +1,5 @@
 package com.jason.alp_vp.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,7 +44,7 @@ fun BountyApplicantsScreen(
     val winnerSelected by viewModel.winnerSelected.collectAsState()
 
     var showSelectWinnerDialog by remember { mutableStateOf(false) }
-    var selectedApplicant by remember { mutableStateOf<Applicant?>(null) }
+    var selectedApplicant: Applicant? by remember { mutableStateOf(null) }
 
     LaunchedEffect(bountyId) {
         viewModel.loadBountyDetail(bountyId)
@@ -177,7 +176,7 @@ fun BountyApplicantsScreen(
                                             color = SubText
                                         )
                                         Text(
-                                            text = "Rp ${bounty.rewardMoney ?: 0}",
+                                            text = "Rp ${bounty.rewardMoney}",
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = AccentGreen
@@ -188,7 +187,7 @@ fun BountyApplicantsScreen(
                                             color = SubText
                                         )
                                         Text(
-                                            text = "${bounty.rewardXp ?: 0} XP",
+                                            text = "${bounty.rewardXp} XP",
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = AccentBlue
@@ -396,7 +395,7 @@ private fun ApplicantCard(
             // Submission info
             if (!applicant.submissionUrl.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Divider(color = SubText.copy(alpha = 0.2f))
+                HorizontalDivider(color = SubText.copy(alpha = 0.2f))
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {

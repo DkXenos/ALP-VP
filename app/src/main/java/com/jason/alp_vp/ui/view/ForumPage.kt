@@ -1,12 +1,11 @@
-// kotlin
 package com.jason.alp_vp.ui.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,96 +33,94 @@ fun ForumPage(
     val events by viewModel.events.collectAsState()
     val postUis by viewModel.postUis.collectAsState()
 
-    Surface(color = Background, modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(vertical = 8.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Event Posts",
+                    color = TitleColor,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                TextButton(onClick = onNavigateToEventPage) {
                     Text(
-                        text = "Event Posts",
-                        color = TitleColor,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        text = "View All",
+                        color = AccentBlue,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
                     )
-                    TextButton(onClick = onNavigateToEventPage) {
-                        Text(
-                            text = "View All",
-                            color = AccentBlue,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
                 }
             }
+        }
 
-            // Show only first 2 events
-            items(events.take(2)) { event ->
-                EventCard(
-                    event = event,
-                    viewModel = viewModel,
-                    onRegister = { viewModel.registerToEvent(it) }
+        // Show only first 2 events
+        items(events.take(2)) { event ->
+            EventCard(
+                event = event,
+                viewModel = viewModel,
+                onRegister = { viewModel.registerToEvent(it) },
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        // Community Feed Section Header
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Community Feed",
+                    color = TitleColor,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
                 )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // Community Feed Section Header
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                TextButton(onClick = onNavigateToPostPage) {
                     Text(
-                        text = "Community Feed",
-                        color = TitleColor,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        text = "View All",
+                        color = AccentBlue,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
                     )
-                    TextButton(onClick = onNavigateToPostPage) {
-                        Text(
-                            text = "View All",
-                            color = AccentBlue,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
                 }
             }
+        }
 
-            // Show only first 3 posts
-            items(postUis.take(3)) { postUi ->
-                PostCard(
-                    id = postUi.post.id,
-                    content = postUi.post.content,
-                    createdAt = postUi.post.createdAt,
-                    upvoteCount = postUi.upvoteCount,
-                    downvoteCount = postUi.downvoteCount,
-                    onUpvote = { viewModel.upvote(postUi.post.id) },
-                    onDownvote = { viewModel.downvote(postUi.post.id) },
-                    onClick = { onNavigateToPostDetail(postUi.post.id) }
-                )
-            }
+        // Show only first 3 posts
+        items(postUis.take(3)) { postUi ->
+            PostCard(
+                id = postUi.post.id,
+                content = postUi.post.content,
+                createdAt = postUi.post.createdAt,
+                upvoteCount = postUi.upvoteCount,
+                downvoteCount = postUi.downvoteCount,
+                onUpvote = { viewModel.upvote(postUi.post.id) },
+                onDownvote = { viewModel.downvote(postUi.post.id) },
+                onClick = { onNavigateToPostDetail(postUi.post.id) }
+            )
+        }
 
-            item {
-                Spacer(modifier = Modifier.height(40.dp))
-            }
+        item {
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }

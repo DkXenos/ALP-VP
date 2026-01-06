@@ -1,5 +1,6 @@
 package com.jason.alp_vp.data.repository
 
+import android.util.Log
 import com.jason.alp_vp.data.dto.comment.CommentResponse
 import com.jason.alp_vp.data.dto.comment.CommentResponseItem
 import com.jason.alp_vp.data.service.CommentService
@@ -11,57 +12,77 @@ import com.jason.alp_vp.ui.model.Comment as UiComment
 class CommentRepository(private val service: CommentService) {
 
     suspend fun createComment(postId: Int, userId: Int, content: String): UiComment {
-        val req = CreateCommentRequest(
-            postId = postId,
-            userId = userId,
-            content = content
-        )
-        val response = service.createComment(req)
-        if (!response.isSuccessful) {
-            val err = response.errorBody()?.string()
-            val msg = err ?: "no body"
-            throw Exception("Failed to create comment: ${response.code()} - $msg")
+        try {
+            val req = CreateCommentRequest(
+                postId = postId,
+                userId = userId,
+                content = content
+            )
+            val response = service.createComment(req)
+            if (!response.isSuccessful) {
+                val err = response.errorBody()?.string()
+                val msg = err ?: "no body"
+                throw Exception("Failed to create comment: ${response.code()} - $msg")
+            }
+            val body = response.body()!!
+            // API returns a CommentResponse (which is an ArrayList<CommentResponseItem>).
+            val items = flattenCommentResponses(listOf(body))
+            val first = items.firstOrNull() ?: throw IllegalStateException("Empty comment response")
+            return dtoToUi(first)
+        } catch (e: Exception) {
+            Log.e("CommentRepository", "Error creating comment", e)
+            throw e
         }
-        val body = response.body()!!
-        // API returns a CommentResponse (which is an ArrayList<CommentResponseItem>).
-        val items = flattenCommentResponses(listOf(body))
-        val first = items.firstOrNull() ?: throw IllegalStateException("Empty comment response")
-        return dtoToUi(first)
     }
 
     suspend fun getCommentById(id: Int): UiComment {
-        val response = service.getCommentById(id)
-        if (!response.isSuccessful) {
-            val err = response.errorBody()?.string()
-            val msg = err ?: "no body"
-            throw Exception("Failed to fetch comment: ${response.code()} - $msg")
+        try {
+            val response = service.getCommentById(id)
+            if (!response.isSuccessful) {
+                val err = response.errorBody()?.string()
+                val msg = err ?: "no body"
+                throw Exception("Failed to fetch comment: ${response.code()} - $msg")
+            }
+            val body = response.body()!!
+            val items = flattenCommentResponses(listOf(body))
+            val first = items.firstOrNull() ?: throw IllegalStateException("Empty comment response")
+            return dtoToUi(first)
+        } catch (e: Exception) {
+            Log.e("CommentRepository", "Error getting comment by ID", e)
+            throw e
         }
-        val body = response.body()!!
-        val items = flattenCommentResponses(listOf(body))
-        val first = items.firstOrNull() ?: throw IllegalStateException("Empty comment response")
-        return dtoToUi(first)
     }
 
     suspend fun updateComment(id: Int, content: String): UiComment {
-        val req = UpdateCommentRequest(content = content)
-        val response = service.updateComment(id, req)
-        if (!response.isSuccessful) {
-            val err = response.errorBody()?.string()
-            val msg = err ?: "no body"
-            throw Exception("Failed to update comment: ${response.code()} - $msg")
+        try {
+            val req = UpdateCommentRequest(content = content)
+            val response = service.updateComment(id, req)
+            if (!response.isSuccessful) {
+                val err = response.errorBody()?.string()
+                val msg = err ?: "no body"
+                throw Exception("Failed to update comment: ${response.code()} - $msg")
+            }
+            val body = response.body()!!
+            val items = flattenCommentResponses(listOf(body))
+            val first = items.firstOrNull() ?: throw IllegalStateException("Empty comment response")
+            return dtoToUi(first)
+        } catch (e: Exception) {
+            Log.e("CommentRepository", "Error updating comment", e)
+            throw e
         }
-        val body = response.body()!!
-        val items = flattenCommentResponses(listOf(body))
-        val first = items.firstOrNull() ?: throw IllegalStateException("Empty comment response")
-        return dtoToUi(first)
     }
 
     suspend fun deleteComment(id: Int) {
-        val response = service.deleteComment(id)
-        if (!response.isSuccessful) {
-            val err = response.errorBody()?.string()
-            val msg = err ?: "no body"
-            throw Exception("Failed to delete comment: ${response.code()} - $msg")
+        try {
+            val response = service.deleteComment(id)
+            if (!response.isSuccessful) {
+                val err = response.errorBody()?.string()
+                val msg = err ?: "no body"
+                throw Exception("Failed to delete comment: ${response.code()} - $msg")
+            }
+        } catch (e: Exception) {
+            Log.e("CommentRepository", "Error deleting comment", e)
+            throw e
         }
     }
 

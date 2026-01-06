@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jason.alp_vp.ui.view.components.WithdrawSection
 import com.jason.alp_vp.ui.view.components.PaymentMethodsCard
+import com.jason.alp_vp.ui.view.components.WalletBalanceCard
 import com.jason.alp_vp.ui.view.components.WalletHistoryList
 import com.jason.alp_vp.ui.viewmodel.CompanyProfileViewModel
 
@@ -34,9 +35,9 @@ fun WalletDetailsView(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Wallet Balance Card (fully-qualified to avoid unresolved import issues)
-            com.jason.alp_vp.ui.view.components.WalletBalanceCard(
-                currentBalance = walletBalance
-            )
+        WalletBalanceCard(
+            currentBalance = walletBalance
+        )
 
             // Withdraw Money Section
             WithdrawSection(
