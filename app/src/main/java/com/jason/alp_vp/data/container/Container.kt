@@ -1,5 +1,7 @@
 package com.jason.alp_vp.data.container
 
+import com.jason.alp_vp.data.repository.EventRepository
+import com.jason.alp_vp.data.repository.PostRepository
 import com.jason.alp_vp.data.service.*
 import com.jason.alp_vp.utils.TokenManager
 import okhttp3.OkHttpClient
@@ -108,6 +110,14 @@ class AppContainer {
     }
 
     // ===== Repositories (Lazy Initialization) =====
+
+    val eventRepository: EventRepository by lazy {
+        EventRepository(eventService)
+    }
+
+    val postRepository: PostRepository by lazy {
+        PostRepository(postService, commentRepository)
+    }
 
     val voteRepository: com.jason.alp_vp.data.repository.VoteRepository by lazy {
         com.jason.alp_vp.data.repository.VoteRepository(voteService)

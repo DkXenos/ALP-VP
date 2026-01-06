@@ -31,20 +31,19 @@ private val BottomNavDark = Color(0xFF111111)
 
 @Suppress("unused")
 @Composable
-fun ActiveBountiesScreen(
-    viewModel: BountyViewModel,
-    onView: (Bounty) -> Unit
+fun ActiveCompanyBounties(
+    viewModel: BountyViewModel
 ) {
     val bounties by viewModel.bounties.collectAsState()
 
-    ActiveBountiesContent(
+    ActiveCompanyBounties(
         bounties = bounties,
-        onView = onView
+        onView = { /* no navigation here (static preview safe) */ }
     )
 }
 
 @Composable
-fun ActiveBountiesContent(
+fun ActiveCompanyBounties(
     bounties: List<Bounty>,
     onView: (Bounty) -> Unit
 ) {
@@ -85,7 +84,7 @@ fun ActiveBountiesContent(
 }
 
 @Composable
-fun BountyCard(bounty: Bounty, onView: (Bounty) -> Unit) {
+fun BountyCompanyCard(bounty: Bounty, onView: (Bounty) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -120,7 +119,7 @@ fun BountyCard(bounty: Bounty, onView: (Bounty) -> Unit) {
 }
 
 @Composable
-fun BottomNavigationBar() {
+fun BottomNavigationBar1() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -138,7 +137,7 @@ fun BottomNavigationBar() {
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PreviewActiveBounties() {
+fun PreviewActiveCompanyBounties() {
     val sample = remember {
         listOf(
             Bounty("1", "Build Website", "BlueTech", "31 Dec 2025", 300, 500000, "active"),
