@@ -22,13 +22,16 @@ private val SoftGray3 = Color(0xFF9E9E9E)
 @Suppress("unused")
 @Composable
 fun SubmissionScreen(
-    bountyId: String
+    bountyId: String,
+    onDone: () -> Unit
 ) {
-    SubmissionContent()
+    SubmissionContent(onDone = onDone)
 }
 
 @Composable
-fun SubmissionContent() {
+fun SubmissionContent(
+    onDone: () -> Unit
+) {
     var link by remember { mutableStateOf("") }
 
     Column(
@@ -37,7 +40,7 @@ fun SubmissionContent() {
             .background(DarkBG3)
             .padding(20.dp)
     ) {
-        Text(text = "Submit Work", color = PureWhite3, fontSize = 24.sp)
+        Text(text = "Submit Your Work", color = PureWhite3, fontSize = 24.sp)
         Spacer(Modifier.height(20.dp))
 
         OutlinedTextField(
@@ -51,11 +54,11 @@ fun SubmissionContent() {
         Spacer(Modifier.height(20.dp))
 
         Button(
-            onClick = {  },
+            onClick = onDone,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen3)
         ) {
-            Text("Mark Done", color = PureWhite3)
+            Text("Mark as Done", color = PureWhite3)
         }
     }
 }
@@ -63,5 +66,5 @@ fun SubmissionContent() {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PreviewSubmission() {
-    SubmissionContent()
+    SubmissionContent(onDone = {})
 }

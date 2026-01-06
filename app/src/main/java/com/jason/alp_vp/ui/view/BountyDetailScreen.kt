@@ -1,14 +1,19 @@
 package com.jason.alp_vp.ui.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIos
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -27,27 +32,58 @@ private val SoftGray2 = Color(0xFFBBBBBB)
 @Composable
 fun BountyDetailScreen(
     viewModel: BountyViewModel,
-    bountyId: String
+    bountyId: String,
+    onSubmit: () -> Unit
 ) {
     val bounties by viewModel.bounties.collectAsState()
     val bounty = bounties.find { it.id == bountyId } ?: return
-    BountyDetailContent(bounty)
+
+    BountyDetailContent(
+        bounty = bounty,
+        onSubmit = onSubmit
+    )
 }
 
 @Composable
-fun BountyDetailContent(bounty: Bounty) {
+fun BountyDetailContent(
+    bounty: Bounty,
+    onSubmit: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(DarkBG2)
             .padding(20.dp)
     ) {
-        Text(
-            text = bounty.title,
-            color = PureWhite2,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.ExtraBold
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
+                .background(Color(0xFF1E1E1E))
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBackIos,
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable {  }
+                )
+                Text(
+                    text = bounty.title,
+                    color = PureWhite2,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -69,7 +105,7 @@ fun BountyDetailContent(bounty: Bounty) {
         Spacer(Modifier.height(30.dp))
 
         Button(
-            onClick = { /* no nav */ },
+            onClick = onSubmit,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen2)
         ) {
@@ -92,5 +128,8 @@ fun PreviewDetailScreen() {
             status = "active"
         )
     }
-    BountyDetailContent(preview)
+    BountyDetailContent(
+        bounty = preview,
+        onSubmit = {}
+    )
 }

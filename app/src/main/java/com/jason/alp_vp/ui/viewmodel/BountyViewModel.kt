@@ -7,6 +7,7 @@ import com.jason.alp_vp.data.container.AppContainer
 import com.jason.alp_vp.data.service.toUiModel
 import com.jason.alp_vp.ui.model.Bounty
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -16,8 +17,17 @@ class BountyViewModel(
 
     private val bountyService = container.bountyService
 
-    private val _bounties = MutableStateFlow<List<Bounty>>(emptyList())
-    val bounties = _bounties.asStateFlow()
+    private val _bounties = MutableStateFlow(
+        listOf(
+            Bounty("1", "Build Website", "BlueTech", "31 Dec 2025", 300, 500000, "active"),
+            Bounty("2", "UI Redesign", "Aura Corp", "15 Jan 2026", 200, 350000, "active"),
+        )
+    )
+    val bounties: StateFlow<List<Bounty>> = _bounties
+
+    fun markBountyDone(bountyId: String) {
+        _bounties.value = _bounties.value.filterNot { it.id == bountyId }
+    }
 
     private val _myBounties = MutableStateFlow<List<Bounty>>(emptyList())
     val myBounties = _myBounties.asStateFlow()
