@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -40,50 +41,94 @@ fun CompanyProfileView(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            companyProfile?.let { company ->
-                CompanyProfileHeader(
-                    companyName = company.name,
-                    walletBalance = walletBalance,
-                    onLogout = {
-                        viewModel.logout()
-                        onLogout()
+            // Loading State
+            if (loadingState) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            // Error State
+            errorState?.let { error ->
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF3D1A1A)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Error: $error",
+                            color = Color(0xFFFF5C5C)
+                        )
+                        Button(
+                            onClick = { viewModel.refreshData() },
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            Text("Retry")
+                        }
                     }
-                )
+                }
+            }
 
-                AboutUsCard(description = company.description)
+            // Company Profile Content (only show when not loading and no error)
+            if (!loadingState && errorState == null) {
+                companyProfile?.let { company ->
+                    CompanyProfileHeader(
+                        companyName = company.name,
+                        walletBalance = walletBalance,
+                        profileImageUrl = company.logo, // Safe handling of profile image
+                        onUploadImage = { imageBytes -> viewModel.uploadProfileImage(imageBytes) },
+                        onDeleteImage = { viewModel.deleteProfileImage() },
+                        onLogout = {
+                            viewModel.logout()
+                            onLogout()
+                        }
+                    )
 
-                CompanySocialStats(
-                    followersCount = followersCount,
-                    followingCount = followingCount,
-                    followedPagesCount = followedPagesCount,
-                    onFollowersClick = onNavigateToFollowers,
-                    onFollowingClick = onNavigateToFollowing,
-                    onFollowedPagesClick = onNavigateToFollowedPages
-                )
+                    AboutUsCard(description = company.description)
 
-                ActiveBountiesSection(
-                    activeBounties = activeBounties,
-                    onBountyClick = { bounty -> onBountyClick(bounty.id) }
-                )
+                    CompanySocialStats(
+                        followersCount = followersCount,
+                        followingCount = followingCount,
+                        followedPagesCount = followedPagesCount,
+                        onFollowersClick = onNavigateToFollowers,
+                        onFollowingClick = onNavigateToFollowing,
+                        onFollowedPagesClick = onNavigateToFollowedPages
+                    )
 
-                ExpiredBountiesSection(
-                    expiredBounties = expiredBounties,
-                    onBountyClick = { bounty -> onBountyClick(bounty.id) }
-                )
+                    ActiveBountiesSection(
+                        activeBounties = activeBounties,
+                        onBountyClick = { bounty -> onBountyClick(bounty.id) }
+                    )
 
-                WalletQuickAccess(
-                    currentBalance = walletBalance,
-                    onViewWalletDetails = onNavigateToWalletDetails
-                )
+                    ExpiredBountiesSection(
+                        expiredBounties = expiredBounties,
+                        onBountyClick = { bounty -> onBountyClick(bounty.id) }
+                    )
+
+                    WalletQuickAccess(
+                        currentBalance = walletBalance,
+                        onViewWalletDetails = onNavigateToWalletDetails
+                    )
+                } ?: run {
+                    // Safe fallback when no company data
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No company data available",
+                            color = Color.Gray
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
-        }
-
-        if (loadingState) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                CircularProgressIndicator()
-            }
         }
 
         errorState?.let { err ->

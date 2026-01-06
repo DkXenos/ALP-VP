@@ -6,78 +6,98 @@ import retrofit2.http.*
 
 interface BountyService {
 
-    // 1. Get All Bounties
+    // 1. Get All Bounties (Public)
     @GET("bounties")
     suspend fun getAllBounties(): Response<BountiesResponse>
 
-    // 2. Get Bounty by ID
+    // 2. Get Bounty by ID (Public)
     @GET("bounties/{id}")
     suspend fun getBountyById(
         @Path("id") id: String
     ): Response<BountyDetailResponse>
 
-    // 3. Claim Bounty
-    @POST("bounties/{id}/claim")
-    suspend fun claimBounty(
-        @Path("id") id: String
-    ): Response<ClaimBountyResponse>
+    // 3. Create Bounty (Company only) - AUTH via interceptor
+    @POST("bounties")
+    suspend fun createBounty(
+        @Body request: BountyCreateDto
+    ): Response<BountyDetailResponse>
 
-    // 4. Unclaim Bounty
-    @DELETE("bounties/{id}/unclaim")
-    suspend fun unclaimBounty(
-        @Path("id") id: String
-    ): Response<UnclaimBountyResponse>
+    // 4. Assign Bounty to User (Claim) - AUTH via interceptor
+    @POST("bounties/{id}/assign")
+    suspend fun assignBounty(
+        @Path("id") bountyId: String,
+        @Body request: BountyAssignDto
+    ): Response<AssignBountyResponse>
 
-    // 5. Get My Claimed Bounties
-    @GET("my-bounties")
+    // 5. Submit Work (User only) - AUTH via interceptor
+    @POST("bounties/{id}/submit")
+    suspend fun submitBounty(
+        @Path("id") bountyId: String,
+        @Body request: BountySubmitDto
+    ): Response<SubmitBountyResponse>
+
+    // 6. Get User's Claimed Bounties - AUTH via interceptor
+    @GET("users/me/bounties")
     suspend fun getMyClaimedBounties(): Response<MyBountiesResponse>
 
-    // 6. Submit Work (Users only)
-    @POST("bounties/{id}/submit")
-    suspend fun submitWork(
-        @Path("id") id: String,
-        @Body request: SubmitWorkRequest
-    ): Response<SubmitWorkResponse>
+    // 7. Get Company's Created Bounties - AUTH via interceptor
+    @GET("companies/me/bounties")
+    suspend fun getCompanyBounties(): Response<BountiesResponse>
 
-    // 7. Get Bounty Applicants (Companies only)
-    @GET("bounties/{id}/applicants")
-    suspend fun getBountyApplicants(
+    // 8. Delete Bounty (Company only) - AUTH via interceptor
+    @DELETE("bounties/{id}")
+    suspend fun deleteBounty(
         @Path("id") id: String
-    ): Response<ApplicantsResponse>
+    ): Response<DeleteBountyResponse>
 
-    // 8. Select Winner (Companies only)
-    @POST("bounties/{id}/select-winner/{userId}")
-    suspend fun selectWinner(
-        @Path("id") bountyId: String,
-        @Path("userId") userId: Int
-    ): Response<SelectWinnerResponse>
+    // 9. Update Bounty Status/Winner (Company) - AUTH via interceptor
+    @PUT("bounties/{id}")
+    suspend fun updateBounty(
+        @Path("id") id: String,
+        @Body request: UpdateBountyRequest
+    ): Response<BountyDetailResponse>
 }
 
-// Response data classes
+// ============= REQUEST DTOs =============
+
+data class BountyCreateDto(
+    val title: String,
+    val company_id: Int,
+    val description: String? = null,
+    val deadline: String, // ISO 8601 format
+    val rewardXp: Int,
+    val rewardMoney: Int,
+    val status: String = "open" // open, in_progress, completed, cancelled
+)
+
+data class BountyAssignDto(
+    val user_id: Int,
+    val bounty_id: String
+)
+
+data class BountySubmitDto(
+    val user_id: Int,
+    val bounty_id: String,
+    val is_completed: Boolean = true,
+    val submission_url: String? = null,
+    val submission_notes: String? = null
+)
+
+data class UpdateBountyRequest(
+    val title: String? = null,
+    val description: String? = null,
+    val deadline: String? = null,
+    val rewardXp: Int? = null,
+    val rewardMoney: Int? = null,
+    val status: String? = null, // open, in_progress, completed, cancelled
+    val winner_id: Int? = null
+)
+
+// ============= RESPONSE DTOs =============
+
 data class BountiesResponse(
     val success: Boolean,
     val data: List<BountyItem>
-)
-
-data class BountyItem(
-    val id: String,  // ✅ Changed from Int to String (UUID)
-    val title: String,
-    val description: String?,
-    val company: String?,  // Added company field
-    val rewardXp: Int?,  // Changed from reward to rewardXp
-    val rewardMoney: Int?,  // Added rewardMoney
-    val status: String,
-    val deadline: String?,
-    val companyId: String?,  // Changed from Int to String
-    val companyName: String?,
-    val createdAt: String?,
-    val claimedBy: String?,  // Changed from Int to String
-    val assignedAt: String?,  // Added for AssignedBounty
-    val isCompleted: Boolean?,  // Added for AssignedBounty
-    val completedAt: String?,  // Added for AssignedBounty
-    val submissionUrl: String? = null,  // Submission URL
-    val submissionNotes: String? = null,  // Optional notes
-    val submittedAt: String? = null  // When work was submitted
 )
 
 data class BountyDetailResponse(
@@ -85,83 +105,120 @@ data class BountyDetailResponse(
     val data: BountyItem
 )
 
-data class ClaimBountyResponse(
-    val success: Boolean,
-    val message: String,
-    val data: BountyItem
+data class BountyItem(
+    val id: String,
+    val title: String,
+    val company_id: Int,
+    val description: String?,
+    val deadline: String,
+    val rewardXp: Int,
+    val rewardMoney: Int,
+    val status: String,
+    val created_at: String,
+    val winner_id: Int?,
+
+    // Relations (populated by backend)
+    val company: BountyCompanyInfo?,
+    val winner: UserInfo?,
+    val assignments: List<BountyAssignmentItem>? = null
 )
 
-data class UnclaimBountyResponse(
+data class BountyCompanyInfo(
+    val id: Int,
+    val name: String,
+    val email: String?,
+    val logo: String?
+)
+
+data class UserInfo(
+    val id: Int,
+    val username: String,
+    val email: String,
+    val profile_image: String?
+)
+
+data class BountyAssignmentItem(
+    val user_id: Int,
+    val bounty_id: String,
+    val assigned_at: String,
+    val is_completed: Boolean,
+    val completed_at: String?,
+    val submission_url: String?,
+    val submission_notes: String?,
+
+    // User relation
+    val user: UserInfo?
+)
+
+data class AssignBountyResponse(
     val success: Boolean,
-    val message: String
+    val message: String,
+    val data: BountyAssignmentItem
+)
+
+data class SubmitBountyResponse(
+    val success: Boolean,
+    val message: String,
+    val data: BountyAssignmentItem
 )
 
 data class MyBountiesResponse(
     val success: Boolean,
-    val data: List<BountyItem>
+    val data: List<MyBountyItem>
 )
 
-// Extension function to convert API response to UI model
-fun BountyItem.toUiModel(): Bounty {
-    return Bounty(
-        id = this.id,  // ✅ No need to convert - already String
+data class MyBountyItem(
+    val bounty_id: String,
+    val title: String,
+    val company_id: Int,
+    val description: String?,
+    val deadline: String,
+    val rewardXp: Int,
+    val rewardMoney: Int,
+    val status: String,
+    val assigned_at: String,
+    val is_completed: Boolean,
+    val completed_at: String?,
+    val submission_url: String?,
+    val submission_notes: String?,
+
+    // Relations
+    val company: BountyCompanyInfo?
+)
+
+data class DeleteBountyResponse(
+    val success: Boolean,
+    val message: String
+)
+
+// ============= UI MODEL MAPPING =============
+
+fun BountyItem.toUiModel(): com.jason.alp_vp.ui.model.Bounty {
+    return com.jason.alp_vp.ui.model.Bounty(
+        id = this.id,
         title = this.title,
-        company = this.company ?: this.companyName ?: "Unknown Company",
-        deadline = this.deadline ?: "",
-        rewardXp = this.rewardXp ?: 0,
-        rewardMoney = this.rewardMoney ?: 0,
+        company = this.company?.name ?: "Unknown Company",
+        deadline = this.deadline,
+        rewardXp = this.rewardXp,
+        rewardMoney = this.rewardMoney,
         status = this.status,
-        claimedBy = this.claimedBy,
-        assignedAt = this.assignedAt,
-        isCompleted = this.isCompleted ?: false
+        claimedBy = this.winner?.username,
+        assignedAt = this.assignments?.firstOrNull()?.assigned_at,
+        isCompleted = this.assignments?.firstOrNull()?.is_completed ?: false
     )
 }
 
-// New Request/Response models for submission workflow
-
-// Submit work request
-data class SubmitWorkRequest(
-    val submissionUrl: String,
-    val submissionNotes: String? = null
-)
-
-// Submit work response
-data class SubmitWorkResponse(
-    val success: Boolean,
-    val message: String,
-    val data: BountyItem
-)
-
-// Applicant with submission details
-data class Applicant(
-    val userId: Int,
-    val username: String?,
-    val email: String,
-    val claimedAt: String,
-    val submissionUrl: String?,
-    val submissionNotes: String?,
-    val submittedAt: String?,
-    val isWinner: Boolean
-)
-
-// Get applicants response
-data class ApplicantsResponse(
-    val success: Boolean,
-    val data: List<Applicant>
-)
-
-// Select winner response
-data class SelectWinnerResponse(
-    val success: Boolean,
-    val message: String,
-    val data: WinnerData
-)
-
-data class WinnerData(
-    val bountyId: String,
-    val winnerId: Int,
-    val xpAwarded: Int,
-    val moneyAwarded: Int,
-    val completedAt: String
-)
-
+fun MyBountyItem.toUiModel(): com.jason.alp_vp.ui.model.Bounty {
+    return com.jason.alp_vp.ui.model.Bounty(
+        id = this.bounty_id,
+        title = this.title,
+        company = this.company?.name ?: "Unknown Company",
+        deadline = this.deadline,
+        rewardXp = this.rewardXp,
+        rewardMoney = this.rewardMoney,
+        status = this.status,
+        claimedBy = null,
+        assignedAt = this.assigned_at,
+        isCompleted = this.is_completed
+    )
+}

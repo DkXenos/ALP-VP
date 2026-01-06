@@ -1,8 +1,8 @@
 package com.jason.alp_vp.data.service
 
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.*
-
 interface CompanyService {
 
     @POST("/companies/register")
@@ -33,6 +33,17 @@ interface CompanyService {
     suspend fun deleteCompany(
         @Path("id") id: String
     ): Response<Unit>
+
+    // ========== LOGO IMAGE ENDPOINTS ==========
+
+    @Multipart
+    @POST("/companies/me/logo")
+    suspend fun uploadCompanyLogo(
+        @Part logo: MultipartBody.Part
+    ): Response<CompanyLogoResponse>
+
+    @DELETE("/companies/me/logo")
+    suspend fun deleteCompanyLogo(): Response<CompanyLogoResponse>
 }
 
 data class CompanyRegisterRequest(
@@ -70,3 +81,12 @@ data class UpdateCompanyRequest(
     val logo: String? = null
 )
 
+// ========== LOGO IMAGE RESPONSE MODELS ==========
+
+data class CompanyLogoResponse(
+    val data: CompanyLogoData
+)
+
+data class CompanyLogoData(
+    val logo: String?
+)

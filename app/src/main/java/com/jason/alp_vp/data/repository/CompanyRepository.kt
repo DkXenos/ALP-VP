@@ -5,6 +5,11 @@ import com.jason.alp_vp.ui.model.Company as UiCompany
 import com.jason.alp_vp.data.service.CompanyRegisterRequest
 import com.jason.alp_vp.data.service.CompanyResponse
 import com.jason.alp_vp.data.service.UpdateCompanyRequest
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+
 
 class CompanyRepository(private val service: CompanyService) {
 
@@ -83,6 +88,29 @@ class CompanyRepository(private val service: CompanyService) {
             val msg = err ?: "no body"
             throw Exception("Failed to delete company: ${response.code()} - $msg")
         }
+    }
+
+    // ========== LOGO IMAGE METHODS (TAMBAHAN) ==========
+
+    suspend fun uploadCompanyLogo(imageFile: File): String? {
+        val requestBody = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+        val part = MultipartBody.Part.createFormData("logo", imageFile.name, requestBody)
+
+        val response = service.uploadCompanyLogo(part)
+        if (!response.isSuccessful) {
+            val err = response.errorBody()?.string()
+            throw Exception("Upload company logo failed: ${response.code()} - ${err ?: "no body"}")
+        }
+        return response.body()?.data?.logo
+    }
+
+    suspend fun deleteCompanyLogo(): String? {
+        val response = service.deleteCompanyLogo()
+        if (!response.isSuccessful) {
+            val err = response.errorBody()?.string()
+            throw Exception("Delete company logo failed: ${response.code()} - ${err ?: "no body"}")
+        }
+        return response.body()?.data?.logo
     }
 
     private fun mapToUi(item: CompanyResponse): UiCompany {

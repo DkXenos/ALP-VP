@@ -1,5 +1,10 @@
 package com.jason.alp_vp.data.container
 
+import com.jason.alp_vp.data.repository.CommentRepository
+import com.jason.alp_vp.data.repository.CompanyRepository
+import com.jason.alp_vp.data.repository.EventRepository
+import com.jason.alp_vp.data.repository.PostRepository
+import com.jason.alp_vp.data.repository.VoteRepository
 import com.jason.alp_vp.data.service.*
 import com.jason.alp_vp.utils.TokenManager
 import okhttp3.OkHttpClient
@@ -11,7 +16,8 @@ import java.util.concurrent.TimeUnit
 
 class AppContainer {
     companion object {
-        private const val BASE_URL = "http://10.0.2.16:57146/api/"
+        // Use localhost for reliable connection (run: adb reverse tcp:3000 tcp:3000)
+        private const val BASE_URL = "http://127.0.0.1:3000/api/"
     }
 
     // OkHttp client with JWT token interceptor
@@ -28,9 +34,9 @@ class AppContainer {
                         if (token != null) {
                             requestBuilder.header("Authorization", "Bearer $token")
                         }
-                    } catch (e: UninitializedPropertyAccessException) {
+                    } catch (_: UninitializedPropertyAccessException) {
                         // TokenManager not initialized yet, continue without token
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         // Any other error, continue without token
                     }
 
@@ -87,26 +93,24 @@ class AppContainer {
         retrofit.create(CompanyService::class.java)
     }
 
-    // ===== Repositories (Lazy Initialization) =====
-
-    val voteRepository: com.jason.alp_vp.data.repository.VoteRepository by lazy {
-        com.jason.alp_vp.data.repository.VoteRepository(voteService)
+    val voteRepository: VoteRepository by lazy {
+        VoteRepository(voteService)
     }
 
-    val commentRepository: com.jason.alp_vp.data.repository.CommentRepository by lazy {
-        com.jason.alp_vp.data.repository.CommentRepository(commentService)
+    val commentRepository: CommentRepository by lazy {
+        CommentRepository(commentService)
     }
 
-    val eventRepository: com.jason.alp_vp.data.repository.EventRepository by lazy {
-        com.jason.alp_vp.data.repository.EventRepository(eventService)
+    val eventRepository: EventRepository by lazy {
+       EventRepository(eventService)
     }
 
-    val postRepository: com.jason.alp_vp.data.repository.PostRepository by lazy {
-        com.jason.alp_vp.data.repository.PostRepository(postService, commentRepository)
+    val postRepository: PostRepository by lazy {
+        PostRepository(postService, commentRepository)
     }
 
-    val companyRepository: com.jason.alp_vp.data.repository.CompanyRepository by lazy {
-        com.jason.alp_vp.data.repository.CompanyRepository(companyService)
+    val companyRepository: CompanyRepository by lazy {
+        CompanyRepository(companyService)
     }
 }
 

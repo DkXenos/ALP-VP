@@ -25,7 +25,6 @@ class PostRepository(
         // body: List<PostResponse> where PostResponse is ArrayList<PostResponseItem>
         val items = flattenPostResponses(body)
 
-        // Map DTO -> UI model, fetch comments for each post concurrently
         items.map { item ->
             async { dtoToUi(item) }
         }.awaitAll()

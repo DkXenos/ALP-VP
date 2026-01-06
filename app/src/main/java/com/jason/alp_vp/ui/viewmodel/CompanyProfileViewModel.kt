@@ -1,19 +1,22 @@
 package com.jason.alp_vp.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jason.alp_vp.data.container.AppContainer
 import com.jason.alp_vp.ui.model.Bounty
 import com.jason.alp_vp.ui.model.Company
 import com.jason.alp_vp.ui.model.PaymentMethod
 import com.jason.alp_vp.ui.model.WalletTransaction
+import com.jason.alp_vp.utils.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 
-class CompanyProfileViewModel : ViewModel() {
+class CompanyProfileViewModel(
+    private val container: AppContainer = AppContainer()
+) : ViewModel() {
 
     private val _companyProfile = MutableStateFlow<Company?>(null)
     val companyProfile: StateFlow<Company?> = _companyProfile.asStateFlow()
@@ -55,280 +58,133 @@ class CompanyProfileViewModel : ViewModel() {
     private fun loadCompanyData() {
         viewModelScope.launch {
             _loadingState.value = true
+            _errorState.value = null
 
             try {
-                // Dummy data - replace with actual repository calls
-                val company = Company(
-                    id = 1,
-                    name = "TechCorp Solutions",
-                    email = "contact@techcorp.com",
-                    description = "Leading technology company specializing in innovative mobile solutions and digital transformation. We help businesses scale through cutting-edge software development and provide comprehensive digital solutions for modern enterprises. Our team of expert developers creates scalable, secure, and user-friendly applications.",
-                    logo = null,
-                    createdAt = "2024-01-01T00:00:00Z",
-                    walletBalance = 15250.75,
-                    followersCount = 1247,
-                    followingCount = 89,
-                    followedPagesCount = 23
-                )
+                // Get current user data from token
+                val userData = TokenManager.getUserData()
+                if (userData?.role != "COMPANY") {
+                    _errorState.value = "Access denied: Not a company account"
+                    return@launch
+                }
 
-                val activeBountiesData = listOf(
-                    Bounty(
-                        id = "bounty_1",
-                        title = "Mobile App UI/UX Design",
-                        company = "TechCorp Solutions",
-                        deadline = "2024-12-21T23:59:59Z",
-                        rewardXp = 250,
-                        rewardMoney = 2500,
-                        status = "active"
-                    ),
-                    Bounty(
-                        id = "bounty_2",
-                        title = "Android Kotlin Development",
-                        company = "TechCorp Solutions",
-                        deadline = "2024-12-23T23:59:59Z",
-                        rewardXp = 350,
-                        rewardMoney = 3500,
-                        status = "active"
-                    ),
-                    Bounty(
-                        id = "event_1",
-                        title = "Tech Conference 2024",
-                        company = "TechCorp Solutions",
-                        deadline = "2024-12-26T23:59:59Z",
-                        rewardXp = 100,
-                        rewardMoney = 0,
-                        status = "active"
-                    ),
-                    Bounty(
-                        id = "event_2",
-                        title = "Mobile Dev Workshop",
-                        company = "TechCorp Solutions",
-                        deadline = "2024-12-30T23:59:59Z",
-                        rewardXp = 200,
-                        rewardMoney = 0,
-                        status = "active"
+                // Load company profile from backend
+                val companyResponse = container.companyService.getCompanyProfile()
+                if (companyResponse.isSuccessful && companyResponse.body() != null) {
+                    val company = companyResponse.body()!!
+                    _companyProfile.value = Company(
+                        id = company.id,
+                        name = company.name,
+                        email = company.email,
+                        description = company.description ?: "",
+                        logo = company.logo,
+                        createdAt = company.createdAt ?: "",
+                        walletBalance = company.walletBalance ?: 0.0,
+                        followersCount = company.followersCount ?: 0,
+                        followingCount = company.followingCount ?: 0,
+                        followedPagesCount = company.followedPagesCount ?: 0
                     )
-                )
+                    _walletBalance.value = company.walletBalance ?: 0.0
+                    _followersCount.value = company.followersCount ?: 0
+                    _followingCount.value = company.followingCount ?: 0
+                    _followedPagesCount.value = company.followedPagesCount ?: 0
+                } else {
+                    _errorState.value = "Failed to load company profile"
+                }
 
-                val expiredBountiesData = listOf(
-                    Bounty(
-                        id = "bounty_exp_1",
-                        title = "Backend API Development",
-                        company = "TechCorp Solutions",
-                        deadline = "2024-11-11T23:59:59Z",
-                        rewardXp = 180,
-                        rewardMoney = 1800,
-                        status = "expired"
-                    ),
-                    Bounty(
-                        id = "bounty_exp_2",
-                        title = "Web Scraping Project",
-                        company = "TechCorp Solutions",
-                        deadline = "2024-11-14T23:59:59Z",
-                        rewardXp = 120,
-                        rewardMoney = 1200,
-                        status = "expired"
-                    )
-                )
-
-                val walletTransactions = listOf(
-                    WalletTransaction(
-                        id = "txn_1",
-                        amount = 2500.0,
-                        type = "earned",
-                        description = "Mobile App UI/UX Design - Bounty completion reward",
-                        status = "completed",
-                        createdAt = Instant.now().minus(3, ChronoUnit.DAYS)
-                    ),
-                    WalletTransaction(
-                        id = "txn_2",
-                        amount = 3500.0,
-                        type = "earned",
-                        description = "Android Development Project - Bounty completion reward",
-                        status = "completed",
-                        createdAt = Instant.now().minus(5, ChronoUnit.DAYS)
-                    ),
-                    WalletTransaction(
-                        id = "txn_3",
-                        amount = -1000.0,
-                        type = "withdrawn",
-                        description = "Withdrawal to Bank Central Asia",
-                        status = "completed",
-                        createdAt = Instant.now().minus(7, ChronoUnit.DAYS)
-                    ),
-                    WalletTransaction(
-                        id = "txn_4",
-                        amount = 1800.0,
-                        type = "earned",
-                        description = "Backend API Development - Bounty completion reward",
-                        status = "completed",
-                        createdAt = Instant.now().minus(10, ChronoUnit.DAYS)
-                    ),
-                    WalletTransaction(
-                        id = "txn_5",
-                        amount = -500.0,
-                        type = "withdrawn",
-                        description = "Withdrawal to GoPay e-wallet",
-                        status = "completed",
-                        createdAt = Instant.now().minus(15, ChronoUnit.DAYS)
-                    )
-                )
-
-                val paymentMethodsData = listOf(
-                    PaymentMethod(
-                        id = "pm_1",
-                        type = "bank",
-                        name = "Bank Central Asia",
-                        accountNumber = "****1234",
-                        isDefault = true
-                    ),
-                    PaymentMethod(
-                        id = "pm_2",
-                        type = "ewallet",
-                        name = "GoPay",
-                        accountNumber = "081234567890",
-                        isDefault = false
-                    ),
-                    PaymentMethod(
-                        id = "pm_3",
-                        type = "bank",
-                        name = "Bank Mandiri",
-                        accountNumber = "****5678",
-                        isDefault = false
-                    ),
-                    PaymentMethod(
-                        id = "pm_4",
-                        type = "ewallet",
-                        name = "OVO",
-                        accountNumber = "081987654321",
-                        isDefault = false
-                    )
-                )
-
-                // Set all the state values
-                _companyProfile.value = company
-                _walletBalance.value = company.walletBalance
-                _activeBounties.value = activeBountiesData
-                _expiredBounties.value = expiredBountiesData
-                _followersCount.value = company.followersCount
-                _followingCount.value = company.followingCount
-                _followedPagesCount.value = company.followedPagesCount
-                _walletHistory.value = walletTransactions
-                _paymentMethods.value = paymentMethodsData
+                // Load company bounties from backend
+                loadCompanyBounties()
 
             } catch (e: Exception) {
+                Log.e("CompanyProfileVM", "Error loading company data", e)
                 _errorState.value = "Failed to load company data: ${e.message}"
+                // Set safe default values
+                _companyProfile.value = null
+                _walletBalance.value = 0.0
+                _activeBounties.value = emptyList()
+                _expiredBounties.value = emptyList()
             } finally {
                 _loadingState.value = false
             }
         }
     }
 
-    fun withdrawMoney(amount: Double, paymentMethodId: String) {
+    private suspend fun loadCompanyBounties() {
+        try {
+            val bountiesResponse = container.bountyService.getCompanyBounties()
+            if (bountiesResponse.isSuccessful && bountiesResponse.body() != null) {
+                val bounties = bountiesResponse.body()!!.data.map { it.toUiModel() }
+                _activeBounties.value = bounties.filter { it.status == "active" }
+                _expiredBounties.value = bounties.filter { it.status == "expired" }
+            }
+        } catch (e: Exception) {
+            Log.e("CompanyProfileVM", "Error loading bounties", e)
+            _activeBounties.value = emptyList()
+            _expiredBounties.value = emptyList()
+        }
+    }
+
+    // Profile image management
+    fun uploadProfileImage(imageBytes: ByteArray) {
         viewModelScope.launch {
             _loadingState.value = true
+            _errorState.value = null
 
             try {
-                // Validate withdrawal
-                if (amount <= 0) {
-                    _errorState.value = "Invalid withdrawal amount"
-                    return@launch
+                val response = container.companyService.uploadProfileImage(imageBytes)
+                if (response.isSuccessful && response.body() != null) {
+                    val updatedCompany = response.body()!!
+                    _companyProfile.value = _companyProfile.value?.copy(logo = updatedCompany.logo)
+                } else {
+                    _errorState.value = "Failed to upload profile image"
                 }
-
-                if (amount > _walletBalance.value) {
-                    _errorState.value = "Insufficient balance"
-                    return@launch
-                }
-
-                val paymentMethod = _paymentMethods.value.find { it.id == paymentMethodId }
-                if (paymentMethod == null) {
-                    _errorState.value = "Payment method not found"
-                    return@launch
-                }
-
-                // Simulate withdrawal process
-                val newBalance = _walletBalance.value - amount
-                _walletBalance.value = newBalance
-
-                // Update company profile balance
-                _companyProfile.value?.let { company ->
-                    _companyProfile.value = company.copy(walletBalance = newBalance)
-                }
-
-                // Add new transaction
-                val newTransaction = WalletTransaction(
-                    id = "txn_${System.currentTimeMillis()}",
-                    amount = -amount,
-                    type = "withdrawn",
-                    description = "Withdrawal to ${paymentMethod.name}",
-                    status = "pending",
-                    createdAt = Instant.now()
-                )
-
-                _walletHistory.value = listOf(newTransaction) + _walletHistory.value
-
-                // Show success message
-                _errorState.value = null
-
             } catch (e: Exception) {
-                _errorState.value = "Withdrawal failed: ${e.message}"
+                Log.e("CompanyProfileVM", "Error uploading profile image", e)
+                _errorState.value = "Failed to upload profile image: ${e.message}"
             } finally {
                 _loadingState.value = false
             }
         }
     }
 
-    fun addPaymentMethod(paymentMethod: PaymentMethod) {
+    fun deleteProfileImage() {
         viewModelScope.launch {
-            try {
-                _paymentMethods.value = _paymentMethods.value + paymentMethod
-            } catch (e: Exception) {
-                _errorState.value = "Failed to add payment method: ${e.message}"
-            }
-        }
-    }
+            _loadingState.value = true
+            _errorState.value = null
 
-    fun removePaymentMethod(paymentMethod: PaymentMethod) {
-        viewModelScope.launch {
             try {
-                if (paymentMethod.isDefault) {
-                    _errorState.value = "Cannot remove default payment method"
-                    return@launch
+                val response = container.companyService.deleteProfileImage()
+                if (response.isSuccessful) {
+                    _companyProfile.value = _companyProfile.value?.copy(logo = null)
+                } else {
+                    _errorState.value = "Failed to delete profile image"
                 }
-
-                _paymentMethods.value = _paymentMethods.value.filter { it.id != paymentMethod.id }
             } catch (e: Exception) {
-                _errorState.value = "Failed to remove payment method: ${e.message}"
+                Log.e("CompanyProfileVM", "Error deleting profile image", e)
+                _errorState.value = "Failed to delete profile image: ${e.message}"
+            } finally {
+                _loadingState.value = false
             }
         }
     }
 
-    fun refreshData() {
-        loadCompanyData()
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                TokenManager.clearToken()
+                TokenManager.clearUserData()
+            } catch (e: Exception) {
+                Log.e("CompanyProfileVM", "Error during logout", e)
+            }
+        }
     }
 
     fun clearError() {
         _errorState.value = null
     }
 
-    fun logout() {
-        viewModelScope.launch {
-            try {
-                // Clear all state
-                _companyProfile.value = null
-                _walletBalance.value = 0.0
-                _activeBounties.value = emptyList()
-                _expiredBounties.value = emptyList()
-                _followersCount.value = 0
-                _followingCount.value = 0
-                _followedPagesCount.value = 0
-                _walletHistory.value = emptyList()
-                _paymentMethods.value = emptyList()
-
-                // Handle logout logic (clear preferences, navigate to login, etc.)
-            } catch (e: Exception) {
-                _errorState.value = "Logout failed: ${e.message}"
-            }
-        }
+    fun refreshData() {
+        loadCompanyData()
     }
 }
+

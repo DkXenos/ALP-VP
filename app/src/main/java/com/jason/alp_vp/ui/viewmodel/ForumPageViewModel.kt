@@ -45,6 +45,13 @@ class ForumPageViewModel(
     private val _selectedPostTimeAgo = MutableStateFlow("")
     val selectedPostTimeAgo: StateFlow<String> = _selectedPostTimeAgo
 
+    // Add missing essential states for production stability
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _errorState = MutableStateFlow<String?>(null)
+    val errorState: StateFlow<String?> = _errorState
+
     private val currentUserId = 1 // Mock current user ID
 
     init {
@@ -53,6 +60,9 @@ class ForumPageViewModel(
 
     private fun loadData() {
         viewModelScope.launch {
+            _isLoading.value = true
+            _errorState.value = null
+
             try {
                 // Load events from backend via repository
                 val eventsList = try {
@@ -72,15 +82,28 @@ class ForumPageViewModel(
 
                 _events.value = eventsList
                 _posts.value = postsList
-
                 recomputePostUis(postsList)
+
             } catch (e: Exception) {
                 Log.e("ForumPageVM", "Unexpected error while loading data", e)
+                _errorState.value = "Failed to load data: ${e.message}"
+                // Set safe default values
                 _events.value = emptyList()
                 _posts.value = emptyList()
                 _postUis.value = emptyList()
+            } finally {
+                _isLoading.value = false
             }
         }
+    }
+
+    // Add utility methods for production stability
+    fun refreshData() {
+        loadData()
+    }
+
+    fun clearError() {
+        _errorState.value = null
     }
 
     private fun recomputePostUis(posts: List<Post>) {
