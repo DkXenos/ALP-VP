@@ -9,7 +9,6 @@ object TokenManager {
     private const val KEY_USER_ID = "user_id"
     private const val KEY_USERNAME = "username"
     private const val KEY_EMAIL = "email"
-    private const val KEY_ROLE = "role"
 
     private lateinit var prefs: SharedPreferences
 
@@ -28,12 +27,11 @@ object TokenManager {
         return prefs.getString(KEY_TOKEN, null)
     }
 
-    fun saveUserData(id: Int, username: String?, email: String, role: String) {
+    fun saveUserData(id: Int, username: String?, email: String) {
         prefs.edit().apply {
             putInt(KEY_USER_ID, id)
             putString(KEY_USERNAME, username ?: email.substringBefore("@"))  // Use email prefix if username is null
             putString(KEY_EMAIL, email)
-            putString(KEY_ROLE, role)
             apply()
         }
     }

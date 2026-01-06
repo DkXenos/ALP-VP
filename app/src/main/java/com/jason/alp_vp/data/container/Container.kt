@@ -1,6 +1,12 @@
 package com.jason.alp_vp.data.container
 
 import com.jason.alp_vp.data.service.*
+import com.jason.alp_vp.data.repository.ProfileRepository
+import com.jason.alp_vp.data.repository.BountyRepository
+import com.jason.alp_vp.data.repository.VoteRepository
+import com.jason.alp_vp.data.repository.CommentRepository
+import com.jason.alp_vp.data.repository.PostRepository
+import com.jason.alp_vp.data.repository.EventRepository
 import com.jason.alp_vp.utils.TokenManager
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -34,7 +40,7 @@ import java.util.concurrent.TimeUnit
  */
 class AppContainer {
     companion object {
-        private const val BASE_URL = "http://192.168.30.108:3000/api/"
+        private const val BASE_URL = "http://10.0.177.118:3000/api/"
     }
 
     // Logging interceptor for debugging API calls
@@ -124,6 +130,7 @@ class AppContainer {
      * ProfileRepository - Manages user profile data
      * Used in: ProfileViewModel, HomeViewModel
      */
+<<<<<<< Updated upstream
     val profileRepository: com.jason.alp_vp.data.repository.ProfileRepository by lazy {
         com.jason.alp_vp.data.repository.ProfileRepository(profileService)
     }
@@ -156,6 +163,53 @@ class AppContainer {
     // - AuthRepository (for login, register, logout)
     // - PostRepository (for creating, updating, deleting posts)
     // - EventRepository (for event registration and management)
+=======
+    val profileRepository: ProfileRepository by lazy {
+        ProfileRepository(profileService)
+    }
+
+    /**
+     * BountyRepository - Manages bounty operations
+     * Used in: BountyListViewModel, BountyDetailViewModel, ProfileViewModel
+     */
+    val bountyRepository: BountyRepository by lazy {
+        BountyRepository(bountyService)
+    }
+
+    /**
+     * EventRepository - Manages events
+     * Used in: ForumPageViewModel, EventViewModels
+     */
+    val eventRepository: EventRepository by lazy {
+        EventRepository(eventService)
+    }
+
+    /**
+     * VoteRepository - Manages voting on comments
+     * Used in: CommentViewModel, PostDetailViewModel
+     */
+    val voteRepository: VoteRepository by lazy {
+        VoteRepository(voteService)
+    }
+
+    /**
+     * CommentRepository - Manages comments on posts
+     * Used in: CommentViewModel, PostDetailViewModel, HomeViewModel
+     */
+    val commentRepository: CommentRepository by lazy {
+        CommentRepository(commentService)
+    }
+
+    /**
+     * PostRepository - Manages posts and maps DTO -> UI model (needs CommentRepository)
+     * Used in: ForumPageViewModel, HomeViewModel, PostDetailViewModel
+     */
+    val postRepository: PostRepository by lazy {
+        PostRepository(postService, commentRepository)
+    }
+
+    // TODO: Add remaining repositories as they are created:
+    // - AuthRepository (for login, register, logout)
+>>>>>>> Stashed changes
     // - CompanyRepository (for company-specific operations)
 }
-

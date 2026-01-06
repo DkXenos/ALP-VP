@@ -1,5 +1,6 @@
 package com.jason.alp_vp.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jason.alp_vp.data.container.AppContainer
@@ -22,6 +23,10 @@ class ForumPageViewModel(
     private val _posts = MutableStateFlow<List<Post>>(emptyList())
     val posts: StateFlow<List<Post>> = _posts
 
+    // Error state for UI to show fetch problems
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
     data class PostUi(
         val post: Post,
         val upvoteCount: Int,
@@ -38,6 +43,10 @@ class ForumPageViewModel(
     private val _selectedPostReplies = MutableStateFlow<List<Comment>>(emptyList())
     val selectedPostReplies: StateFlow<List<Comment>> = _selectedPostReplies
 
+    // Expose a pre-formatted "time ago" string for the selected post so UI doesn't compute it
+    private val _selectedPostTimeAgo = MutableStateFlow("")
+    val selectedPostTimeAgo: StateFlow<String> = _selectedPostTimeAgo
+
     private val currentUserId = 1 // Mock current user ID
 
     init {
@@ -47,17 +56,43 @@ class ForumPageViewModel(
     private fun loadData() {
         viewModelScope.launch {
             try {
-                // TODO: Load events from backend when EventRepository is ready
-                _events.value = emptyList()
+                // Load events from backend via repository
+                val eventsList = try {
+                    val ev = container.eventRepository.getAllEvents()
+                    Log.d("ForumPageVM", "Loaded events count=${ev.size}")
+                    ev
+                } catch (e: Exception) {
+                    Log.e("ForumPageVM", "Failed to load events", e)
+                    _error.value = "Failed to load events: ${e.message}"
+                    emptyList()
+                }
 
-                // TODO: Load posts from backend when PostRepository is ready
-                _posts.value = emptyList()
+                // Load posts from backend via repository
+                val postsList = try {
+                    val p = container.postRepository.getAllPosts()
+                    Log.d("ForumPageVM", "Loaded posts count=${p.size}")
+                    p
+                } catch (e: Exception) {
+                    Log.e("ForumPageVM", "Failed to load posts", e)
+                    _error.value = _error.value?.let { it + "; Failed to load posts: ${e.message}" } ?: "Failed to load posts: ${e.message}"
+                    emptyList()
+                }
 
-                recomputePostUis(emptyList())
+                _events.value = eventsList
+                _posts.value = postsList
+
+                // if postsList is empty, log a warning so it's obvious in logcat
+                if (postsList.isEmpty()) {
+                    Log.w("ForumPageVM", "Posts list is empty after loadData(). This may be expected (no posts) or due to a backend/auth error.")
+                }
+
+                recomputePostUis(postsList)
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageVM", "Unexpected error while loading data", e)
                 _events.value = emptyList()
                 _posts.value = emptyList()
+                _postUis.value = emptyList()
+                _error.value = "Unexpected error: ${e.message}"
             }
         }
     }
@@ -67,7 +102,10 @@ class ForumPageViewModel(
             var upvoteCount = 0
             var downvoteCount = 0
 
-            post.comments.forEach { comment ->
+            // defensive: ensure comments list non-null
+            val comments = post.comments ?: emptyList()
+
+            comments.forEach { comment ->
                 comment.commentVotes.forEach { vote ->
                     when (vote.voteType) {
                         "upvote" -> upvoteCount++
@@ -146,6 +184,22 @@ class ForumPageViewModel(
             _selectedPost.value = post
             // Load replies dari comments yang ada di post
             _selectedPostReplies.value = post?.comments ?: emptyList()
+            // Compute and set time-ago string for the UI
+            _selectedPostTimeAgo.value = post?.let { computeTimeAgo(it.createdAt) } ?: ""
+        }
+    }
+
+    // Compute a short "time ago" string from a creation Instant (moved from PostDetail)
+    private fun computeTimeAgo(createdAt: Instant): String {
+        val now = Instant.now()
+        val duration = Duration.between(createdAt, now)
+
+        return when {
+            duration.toMinutes() < 1 -> "just now"
+            duration.toMinutes() < 60 -> "${duration.toMinutes()}m ago"
+            duration.toHours() < 24 -> "${duration.toHours()}h ago"
+            duration.toDays() < 7 -> "${duration.toDays()}d ago"
+            else -> "${duration.toDays() / 7}w ago"
         }
     }
 

@@ -33,12 +33,26 @@ fun ForumPage(
 ) {
     val events by viewModel.events.collectAsState()
     val postUis by viewModel.postUis.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     Surface(color = Background, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Show error banner if present
+            item {
+                if (!error.isNullOrBlank()) {
+                    Text(
+                        text = error ?: "",
+                        color = Color.Red,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    )
+                }
+            }
+
             item {
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -134,4 +148,3 @@ fun ForumPage(
 fun ForumPagePreview() {
     ForumPage()
 }
-

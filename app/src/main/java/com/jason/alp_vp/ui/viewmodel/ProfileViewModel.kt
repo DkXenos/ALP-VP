@@ -13,7 +13,8 @@ class ProfileViewModel(
     private val container: AppContainer = AppContainer()
 ) : ViewModel() {
 
-    private val profileService = container.profileService
+    // ✅ CORRECT: Use repository instead of service
+    private val profileRepository = container.profileRepository
 
     private val _profileData = MutableStateFlow<ProfileData?>(null)
     val profileData = _profileData.asStateFlow()
@@ -38,28 +39,23 @@ class ProfileViewModel(
             _error.value = null
             try {
                 Log.d("ProfileViewModel", "Loading profile...")
-                val response = profileService.getProfile()
-
-                if (response.isSuccessful && response.body() != null) {
-                    val profileData = response.body()!!.data
-                    _profileData.value = profileData
-                    Log.d("ProfileViewModel", "Profile loaded successfully")
-                    Log.d("ProfileViewModel", "Profile ID: ${profileData.id}")
-                    Log.d("ProfileViewModel", "Profile username: ${profileData.username}")
-                    Log.d("ProfileViewModel", "Profile name: ${profileData.name}")
-                    Log.d("ProfileViewModel", "Profile email: ${profileData.email}")
-                    Log.d("ProfileViewModel", "Profile role: ${profileData.role}")
-                    Log.d("ProfileViewModel", "Profile XP: ${profileData.xp}")
-                    Log.d("ProfileViewModel", "Profile Balance: ${profileData.balance}")
-                    Log.d("ProfileViewModel", "Display name: ${profileData.getDisplayName()}")
-                } else {
-                    val errorMsg = "Failed to load profile: ${response.code()} - ${response.message()}"
-                    Log.e("ProfileViewModel", errorMsg)
-                    _error.value = errorMsg
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository - it handles error checking
+                val response = profileRepository.getProfile()
+                
+                val profileData = response.data
+                _profileData.value = profileData
+                Log.d("ProfileViewModel", "Profile loaded successfully")
+                Log.d("ProfileViewModel", "Profile ID: ${profileData.id}")
+                Log.d("ProfileViewModel", "Profile username: ${profileData.username}")
+                Log.d("ProfileViewModel", "Profile name: ${profileData.name}")
+                Log.d("ProfileViewModel", "Profile email: ${profileData.email}")
+                Log.d("ProfileViewModel", "Profile role: ${profileData.role}")
+                Log.d("ProfileViewModel", "Profile XP: ${profileData.xp}")
+                Log.d("ProfileViewModel", "Profile Balance: ${profileData.balance}")
+                Log.d("ProfileViewModel", "Display name: ${profileData.getDisplayName()}")
             } catch (e: Exception) {
-                val errorMsg = "Error loading profile: ${e.message}"
+                // Repository provides user-friendly error messages
+                val errorMsg = e.message ?: "Error loading profile"
                 Log.e("ProfileViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {
@@ -72,16 +68,13 @@ class ProfileViewModel(
         viewModelScope.launch {
             try {
                 Log.d("ProfileViewModel", "Loading profile stats...")
-                val response = profileService.getProfileStats()
-
-                if (response.isSuccessful && response.body() != null) {
-                    _profileStats.value = response.body()!!.data
-                    Log.d("ProfileViewModel", "Stats loaded: ${response.body()!!.data}")
-                } else {
-                    Log.e("ProfileViewModel", "Failed to load stats: ${response.code()}")
-                }
+                // ✅ Use repository
+                val response = profileRepository.getProfileStats()
+                _profileStats.value = response.data
+                Log.d("ProfileViewModel", "Stats loaded: ${response.data}")
             } catch (e: Exception) {
-                Log.e("ProfileViewModel", "Error loading stats: ${e.message}", e)
+                val errorMsg = e.message ?: "Error loading stats"
+                Log.e("ProfileViewModel", errorMsg, e)
             }
         }
     }
@@ -92,20 +85,18 @@ class ProfileViewModel(
             _error.value = null
             try {
                 Log.d("ProfileViewModel", "Updating profile...")
-                val response = profileService.updateProfile(
-                    UpdateProfileRequest(username, email)
-                )
-
-                if (response.isSuccessful && response.body() != null) {
-                    _profileData.value = response.body()!!.data
-                    Log.d("ProfileViewModel", "Profile updated successfully")
-                } else {
-                    val errorMsg = "Failed to update profile: ${response.code()}"
-                    Log.e("ProfileViewModel", errorMsg)
-                    _error.value = errorMsg
-                }
+                // ✅ Use repository
+                val response = profileRepository.updateProfile(username, email)
+                _profileData.value = response.data
+                Log.d("ProfileViewModel", "Profile updated successfully")
+            } catch (e: IllegalArgumentException) {
+                // Validation error
+                val errorMsg = e.message ?: "Invalid input"
+                Log.e("ProfileViewModel", errorMsg, e)
+                _error.value = errorMsg
             } catch (e: Exception) {
-                val errorMsg = "Error updating profile: ${e.message}"
+                // Network error
+                val errorMsg = e.message ?: "Error updating profile"
                 Log.e("ProfileViewModel", errorMsg, e)
                 _error.value = errorMsg
             } finally {

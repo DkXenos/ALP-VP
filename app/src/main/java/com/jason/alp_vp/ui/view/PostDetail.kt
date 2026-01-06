@@ -222,6 +222,7 @@ fun PostDetail(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(RoundedCornerShape(22.dp))
+                            .clip(RoundedCornerShape(22.dp))
                             .background(Color(0xFF2F6BFF)),
                         contentAlignment = Alignment.Center
                     ) {

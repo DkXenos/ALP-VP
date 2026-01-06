@@ -14,6 +14,10 @@ class BountyViewModel(
     private val container: AppContainer = AppContainer()
 ) : ViewModel() {
 
+<<<<<<< Updated upstream
+=======
+    // ✅ CORRECT: Use repository instead of service
+>>>>>>> Stashed changes
     private val bountyRepository = container.bountyRepository
 
     private val _bounties = MutableStateFlow<List<Bounty>>(emptyList())
@@ -38,12 +42,19 @@ class BountyViewModel(
             _error.value = null
             try {
                 Log.d("BountyViewModel", "Loading all bounties...")
+<<<<<<< Updated upstream
                 // ✅ Use repository - it handles error checking and validation
+=======
+                // ✅ Use repository
+>>>>>>> Stashed changes
                 val response = bountyRepository.getAllBounties()
                 Log.d("BountyViewModel", "Loaded ${response.data.size} bounties")
                 _bounties.value = response.data.map { it.toUiModel() }
             } catch (e: Exception) {
+<<<<<<< Updated upstream
                 // Repository provides user-friendly error messages
+=======
+>>>>>>> Stashed changes
                 val errorMsg = e.message ?: "Error loading bounties"
                 Log.e("BountyViewModel", errorMsg, e)
                 _error.value = errorMsg
@@ -79,7 +90,11 @@ class BountyViewModel(
             _error.value = null
             try {
                 Log.d("BountyViewModel", "Claiming bounty $bountyId...")
+<<<<<<< Updated upstream
                 // ✅ Use repository - it validates and provides user-friendly errors
+=======
+                // ✅ Use repository
+>>>>>>> Stashed changes
                 bountyRepository.claimBounty(bountyId)
                 Log.d("BountyViewModel", "Successfully claimed bounty $bountyId")
                 // Reload bounties to reflect the change
@@ -101,7 +116,11 @@ class BountyViewModel(
             _error.value = null
             try {
                 Log.d("BountyViewModel", "Unclaiming bounty $bountyId...")
+<<<<<<< Updated upstream
                 // ✅ Use repository - it validates and provides user-friendly errors
+=======
+                // ✅ Use repository
+>>>>>>> Stashed changes
                 bountyRepository.unclaimBounty(bountyId)
                 Log.d("BountyViewModel", "Successfully unclaimed bounty $bountyId")
                 // Reload bounties to reflect the change

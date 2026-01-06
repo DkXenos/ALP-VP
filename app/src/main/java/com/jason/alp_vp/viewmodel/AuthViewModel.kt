@@ -67,8 +67,7 @@ class AuthViewModel(
                     TokenManager.saveUserData(
                         id = companyResponse.data.company.id,
                         username = companyResponse.data.company.name,  // Use company name as username
-                        email = companyResponse.data.company.email,
-                        role = "COMPANY"  // Set role as COMPANY
+                        email = companyResponse.data.company.email
                     )
 
                     Log.d("AuthViewModel", "Company login successful!")
@@ -93,8 +92,7 @@ class AuthViewModel(
                     TokenManager.saveUserData(
                         id = response.data.id,
                         username = response.data.username ?: response.data.email.substringBefore("@"),
-                        email = response.data.email,
-                        role = response.data.role
+                        email = response.data.email
                     )
                 }
 
@@ -130,8 +128,7 @@ class AuthViewModel(
                 TokenManager.saveUserData(
                     id = response.data.id,
                     username = response.data.username ?: response.data.email.substringBefore("@"),  // Use email prefix if username is null
-                    email = response.data.email,
-                    role = response.data.role
+                    email = response.data.email
                 )
                 _isLoggedIn.value = true
             } catch (e: Exception) {
