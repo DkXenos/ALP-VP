@@ -134,6 +134,7 @@ data class BountyItem(
     // Relations (populated by backend)
     val company: String,  // Company name returned as string by API
     val companyId: Int? = null,  // Company ID if needed separately
+    val isOwner: Boolean = false,  // Whether current user is the owner
     val winner: UserInfo?,
     val assignments: List<BountyAssignmentItem>? = null
 )

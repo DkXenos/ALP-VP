@@ -55,12 +55,12 @@ fun EventPage(
             // List of all events
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
                 items(events) { event ->
                     EventCard(
                         event = event,
-                        viewModel = viewModel,
                         onRegister = { viewModel.registerToEvent(it) }
                     )
                 }

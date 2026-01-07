@@ -1,25 +1,29 @@
 package com.jason.alp_vp.data.dto.post
 
+import com.google.gson.annotations.SerializedName
+
+// Flat structure - backend returns username directly in post object
 data class PostResponseItem(
-    val id: Int,
-    val user_id: Int,
-    val username: String,  // Flattened - NOT nested in author object
-    val content: String,
-    val image: String?,
-    val created_at: String,
-    val comments: List<CommentItem>? = null
+    @SerializedName("id") val id: Int,
+    @SerializedName("user_id") val user_id: Int,
+    @SerializedName("username") val username: String,  // Flat - NOT nested in user object
+    @SerializedName("content") val content: String,
+    @SerializedName("image") val image: String?,
+    @SerializedName("created_at") val created_at: String,
+    @SerializedName("comments") val comments: List<CommentItem>?
 )
 
 data class CommentItem(
-    val id: Int,
-    val post_id: Int,
-    val content: String,
-    val created_at: String,
-    val commentVotes: List<CommentVote>? = null
+    @SerializedName("id") val id: Int,
+    @SerializedName("post_id") val post_id: Int,
+    @SerializedName("content") val content: String,
+    @SerializedName("created_at") val created_at: String,
+    @SerializedName("commentVotes") val commentVotes: List<VoteItem>?
 )
 
-data class CommentVote(
-    val id: Int,
-    val vote_type: String,  // "upvote" or "downvote"
-    val comment_id: Int
+data class VoteItem(
+    @SerializedName("id") val id: Int,
+    @SerializedName("vote_type") val vote_type: String,  // "upvote" or "downvote"
+    @SerializedName("comment_id") val comment_id: Int
 )
+

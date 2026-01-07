@@ -1,9 +1,11 @@
 package com.jason.alp_vp.data.repository
 
-import com.jason.alp_vp.data.dto.post.PostResponse
+import android.util.Log
 import com.jason.alp_vp.data.dto.post.PostResponseItem
 import com.jason.alp_vp.data.service.PostService
 import com.jason.alp_vp.ui.model.Post
+import com.jason.alp_vp.ui.model.Comment
+import com.jason.alp_vp.ui.model.CommentVote
 import java.time.Instant
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -19,11 +21,16 @@ class PostRepository(
         if (!response.isSuccessful) {
             val err = response.errorBody()?.string()
             val msg = err ?: "no body"
+            Log.e("PostRepository", "Failed to fetch posts: ${response.code()} - $msg")
             throw Exception("Failed to fetch posts: ${response.code()} - $msg")
         }
-        val body = response.body() ?: emptyList()
-        // body: List<PostResponse> where PostResponse is ArrayList<PostResponseItem>
-        val items = flattenPostResponses(body)
+        val wrapper = response.body()
+        if (wrapper == null) {
+            Log.e("PostRepository", "Response body is null")
+            throw Exception("Empty response from server")
+        }
+        val items = wrapper.data  // Unwrap from { "data": [...] }
+        Log.d("PostRepository", "Received ${items.size} posts from API")
 
         items.map { item ->
             async { dtoToUi(item) }
@@ -37,36 +44,38 @@ class PostRepository(
             val msg = err ?: "no body"
             throw Exception("Failed to fetch post: ${response.code()} - $msg")
         }
-        val body = response.body()!!
-        val items = flattenPostResponses(listOf(body))
-        val first = items.firstOrNull() ?: throw IllegalStateException("Empty post response")
-        return dtoToUi(first)
+        val wrapper = response.body() ?: throw IllegalStateException("Empty post response")
+        val item = wrapper.data  // Unwrap from { "data": {...} }
+        return dtoToUi(item)
     }
 
     private suspend fun dtoToUi(item: PostResponseItem): Post {
-        val comments = try {
-            commentRepository.getCommentsByPost(item.id)
-        } catch (_: Exception) {
-            emptyList()
-        }
+        // Convert embedded comments from API response
+        val comments = item.comments?.map { commentItem ->
+            Comment(
+                id = commentItem.id,
+                postId = commentItem.post_id,
+                content = commentItem.content,
+                createdAt = try { Instant.parse(commentItem.created_at) } catch (_: Exception) { Instant.now() },
+                commentVotes = commentItem.commentVotes?.map { vote ->
+                    CommentVote(
+                        commentId = commentItem.id,
+                        voteId = vote.id,
+                        voteType = vote.vote_type
+                    )
+                } ?: emptyList()
+            )
+        } ?: emptyList()
+
         return Post(
             id = item.id,
             userId = item.user_id,
-            authorName = item.username,  // Flattened from nested author.username
+            authorName = item.username,  // Flattened - direct from root
             authorEmail = "",  // Not provided in flattened API response
             content = item.content,
             image = item.image,
             createdAt = try { Instant.parse(item.created_at) } catch (_: Exception) { Instant.now() },
             comments = comments
         )
-    }
-
-    // Flatten List<PostResponse> -> List<PostResponseItem>
-    private fun flattenPostResponses(listOfResponses: List<PostResponse>): List<PostResponseItem> {
-        val out = mutableListOf<PostResponseItem>()
-        for (r in listOfResponses) {
-            out.addAll(r)
-        }
-        return out
     }
 }

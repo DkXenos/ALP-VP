@@ -1,6 +1,6 @@
 package com.jason.alp_vp.data.service
 
-import com.jason.alp_vp.data.dto.event.EventResponse
+import com.jason.alp_vp.data.dto.event.EventResponseItem
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -9,21 +9,21 @@ interface EventService {
     @POST("/events")
     suspend fun createEvent(
         @Body event: CreateEventRequest
-    ): Response<EventResponse>
+    ): Response<ApiResponseWrapper<EventResponseItem>>
 
     @GET("/events")
-    suspend fun getAllEvents(): Response<List<EventResponse>>
+    suspend fun getAllEvents(): Response<ApiResponseWrapper<List<EventResponseItem>>>
 
     @GET("/events/{id}")
     suspend fun getEventById(
         @Path("id") id: Int
-    ): Response<EventResponse>
+    ): Response<ApiResponseWrapper<EventResponseItem>>
 
     @PUT("/events/{id}")
     suspend fun updateEvent(
         @Path("id") id: Int,
         @Body event: UpdateEventRequest
-    ): Response<EventResponse>
+    ): Response<ApiResponseWrapper<EventResponseItem>>
 
     @DELETE("/events/{id}")
     suspend fun deleteEvent(
@@ -33,12 +33,12 @@ interface EventService {
     @GET("/companies/{companyId}/events")
     suspend fun getEventsByCompany(
         @Path("companyId") companyId: String
-    ): Response<List<EventResponse>>
+    ): Response<ApiResponseWrapper<List<EventResponseItem>>>
 
     @POST("/events/register")
     suspend fun registerToEvent(
         @Body registration: EventRegistrationRequest
-    ): Response<EventResponse>
+    ): Response<ApiResponseWrapper<EventResponseItem>>
 
     @DELETE("/events/{eventId}/users/{userId}")
     suspend fun unregisterFromEvent(

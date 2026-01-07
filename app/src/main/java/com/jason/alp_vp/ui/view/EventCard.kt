@@ -1,141 +1,165 @@
 package com.jason.alp_vp.ui.view
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jason.alp_vp.ui.model.Event
-import com.jason.alp_vp.ui.viewmodel.ForumPageViewModel
+import java.time.Duration
+import java.time.Instant
 
-// Colors (local to EventCard)
+// Colors (dark theme)
 private val CardBackground = Color(0xFF14161A)
-private val TimeBadge = Color(0xFF413847)
-private val RegisterGreen = Color(0xFF55D07E)
 private val TitleColor = Color(0xFFFFFFFF)
 private val SubText = Color(0xFF98A0B3)
+private val AccentBlue = Color(0xFF2F6BFF)
+private val AccentGreen = Color(0xFF57D06A)
+private val AccentOrange = Color(0xFFFF9500)
 
 @Composable
 fun EventCard(
     event: Event,
     modifier: Modifier = Modifier,
-    viewModel: ForumPageViewModel = viewModel(),
     onRegister: (Int) -> Unit = {}
 ) {
-    val timeText = viewModel.formatDurationShort(event.eventDate)
-    val registeredCount = event.currentRegistrations
+    val timeUntil = remember(event.eventDate) {
+        val duration = Duration.between(Instant.now(), event.eventDate)
+        when {
+            duration.isNegative -> "Event ended"
+            duration.toDays() > 0 -> "in ${duration.toDays()} days"
+            duration.toHours() > 0 -> "in ${duration.toHours()} hours"
+            duration.toMinutes() > 0 -> "in ${duration.toMinutes()} minutes"
+            else -> "starting soon"
+        }
+    }
+
+    val registrationProgress = remember(event.currentRegistrations, event.registeredQuota) {
+        if (event.registeredQuota > 0) {
+            event.currentRegistrations.toFloat() / event.registeredQuota.toFloat()
+        } else {
+            0f
+        }
+    }
+
+    val isFull = event.currentRegistrations >= event.registeredQuota
 
     Card(
-        colors = CardDefaults.cardColors(CardBackground),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(4.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Box(modifier = Modifier.padding(16.dp)) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                    // Left tag
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .background(Color(0xFF0F2B7F), shape = RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 6.dp)
-                    ) {
-                        Text("EVENT", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Time badge top-right
-                    Box(
-                        modifier = Modifier
-                            .background(TimeBadge, shape = RoundedCornerShape(12.dp))
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                    ) {
-                        Text(timeText, color = Color(0xFFFFE9E9), fontSize = 12.sp)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Title
-                Text(
-                    text = event.title,
-                    color = TitleColor,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Byline
-                Text(text = "by Company #${event.companyId}", color = SubText, fontSize = 13.sp)
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Description
-                Text(
-                    text = event.description,
-                    color = SubText,
-                    fontSize = 14.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "$registeredCount/${event.registeredQuota} registered",
-                        color = SubText,
-                        fontSize = 13.sp
+                        text = event.title,
+                        color = TitleColor,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
                     )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Button(
-                        onClick = { onRegister(event.id) },
-                        colors = ButtonDefaults.buttonColors(containerColor = RegisterGreen),
-                        shape = RoundedCornerShape(20.dp),
-                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp)
-                    ) {
-                        Text("Register Now", color = Color.White, fontWeight = FontWeight.SemiBold)
-                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = event.companyName,
+                        color = AccentBlue,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
+
+                // Time indicator
+                Surface(
+                    color = AccentOrange.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = timeUntil,
+                        color = AccentOrange,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Description
+            Text(
+                text = event.description,
+                color = SubText,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                maxLines = 3,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Registration progress
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Registrations",
+                        color = SubText,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = "${event.currentRegistrations} / ${event.registeredQuota}",
+                        color = TitleColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                LinearProgressIndicator(
+                    progress = { registrationProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp),
+                    color = if (isFull) AccentOrange else AccentGreen,
+                    trackColor = Color(0xFF2A2D35)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Register button
+            Button(
+                onClick = { onRegister(event.id) },
+                enabled = !isFull,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AccentBlue,
+                    disabledContainerColor = Color(0xFF2A2D35)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = if (isFull) "Event Full" else "Register Now",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
 }
 
-@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
-@Composable
-fun EventCardPreview() {
-    val now = java.time.Instant.now()
-    val sampleEvent = Event(
-        id = 1,
-        title = "Build Weekend Hackathon",
-        description = "Join us to build cool projects and win prizes.",
-        eventDate = now.plusSeconds(60 * 60 * 24),
-        companyId = 7,
-        registeredQuota = 200,
-        currentRegistrations = 0
-    )
-
-    EventCard(event = sampleEvent)
-}

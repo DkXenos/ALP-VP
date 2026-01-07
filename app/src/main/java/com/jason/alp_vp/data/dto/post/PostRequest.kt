@@ -1,9 +1,8 @@
 package com.jason.alp_vp.data.dto.post
 
+import com.google.gson.annotations.SerializedName
+
 data class PostRequest(
-    val filters: Filters,
-    val limit: Int,
-    val page: Int,
-    val q: String,
-    val sort: String
+    @SerializedName("content") val content: String,
+    @SerializedName("image") val image: String? = null
 )

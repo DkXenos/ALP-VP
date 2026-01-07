@@ -1,7 +1,7 @@
 package com.jason.alp_vp.data.repository
 
+import android.util.Log
 import com.jason.alp_vp.data.service.CreateEventRequest
-import com.jason.alp_vp.data.dto.event.EventResponse
 import com.jason.alp_vp.data.dto.event.EventResponseItem
 import com.jason.alp_vp.data.service.EventRegistrationRequest
 import com.jason.alp_vp.data.service.EventService
@@ -25,10 +25,9 @@ class EventRepository(private val service: EventService) {
             val msg = err ?: "no body"
             throw Exception("Failed to create event: ${response.code()} - $msg")
         }
-        val body = response.body()!!
-        val items = flattenEventResponses(listOf(body))
-        val first = items.firstOrNull() ?: throw IllegalStateException("Empty event response")
-        return dtoToUi(first)
+        val wrapper = response.body() ?: throw IllegalStateException("Empty event response")
+        val item = wrapper.data  // Unwrap from { "data": {...} }
+        return dtoToUi(item)
     }
 
     suspend fun getAllEvents(): List<Event> {
@@ -36,10 +35,16 @@ class EventRepository(private val service: EventService) {
         if (!response.isSuccessful) {
             val err = response.errorBody()?.string()
             val msg = err ?: "no body"
+            Log.e("EventRepository", "Failed to fetch events: ${response.code()} - $msg")
             throw Exception("Failed to fetch events: ${response.code()} - $msg")
         }
-        val body = response.body()!!
-        val items = flattenEventResponses(body)
+        val wrapper = response.body()
+        if (wrapper == null) {
+            Log.e("EventRepository", "Response body is null")
+            throw Exception("Empty response from server")
+        }
+        val items = wrapper.data  // Unwrap from { "data": [...] }
+        Log.d("EventRepository", "Received ${items.size} events from API")
         return items.map { dtoToUi(it) }
     }
 
@@ -50,10 +55,9 @@ class EventRepository(private val service: EventService) {
             val msg = err ?: "no body"
             throw Exception("Failed to fetch event: ${response.code()} - $msg")
         }
-        val body = response.body()!!
-        val items = flattenEventResponses(listOf(body))
-        val first = items.firstOrNull() ?: throw IllegalStateException("Empty event response")
-        return dtoToUi(first)
+        val wrapper = response.body() ?: throw IllegalStateException("Empty event response")
+        val item = wrapper.data  // Unwrap from { "data": {...} }
+        return dtoToUi(item)
     }
 
     suspend fun updateEvent(id: Int, title: String? = null, description: String? = null, eventDateIso: String? = null, registeredQuota: Int? = null): Event {
@@ -69,10 +73,9 @@ class EventRepository(private val service: EventService) {
             val msg = err ?: "no body"
             throw Exception("Failed to update event: ${response.code()} - $msg")
         }
-        val body = response.body()!!
-        val items = flattenEventResponses(listOf(body))
-        val first = items.firstOrNull() ?: throw IllegalStateException("Empty event response")
-        return dtoToUi(first)
+        val wrapper = response.body() ?: throw IllegalStateException("Empty event response")
+        val item = wrapper.data  // Unwrap from { "data": {...} }
+        return dtoToUi(item)
     }
 
     suspend fun deleteEvent(id: Int) {
@@ -91,8 +94,8 @@ class EventRepository(private val service: EventService) {
             val msg = err ?: "no body"
             throw Exception("Failed to fetch company events: ${response.code()} - $msg")
         }
-        val body = response.body()!!
-        val items = flattenEventResponses(body)
+        val wrapper = response.body() ?: throw IllegalStateException("Empty response")
+        val items = wrapper.data  // Unwrap from { "data": [...] }
         return items.map { dtoToUi(it) }
     }
 
@@ -104,7 +107,7 @@ class EventRepository(private val service: EventService) {
             val msg = err ?: "no body"
             throw Exception("Failed to register to event: ${response.code()} - $msg")
         }
-        // body may contain registered user data; not required for repository at this time
+        // Response contains updated event data wrapped in { "data": {...} }
     }
 
     suspend fun unregisterFromEvent(eventId: Int, userId: Int) {
@@ -116,13 +119,6 @@ class EventRepository(private val service: EventService) {
         }
     }
 
-    private fun flattenEventResponses(listOfResponses: List<EventResponse>): List<EventResponseItem> {
-        val out = mutableListOf<EventResponseItem>()
-        for (r in listOfResponses) {
-            out.addAll(r)
-        }
-        return out
-    }
 
     private fun dtoToUi(item: EventResponseItem): Event {
         return Event(
