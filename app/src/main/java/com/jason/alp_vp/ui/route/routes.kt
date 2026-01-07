@@ -1,20 +1,21 @@
 package com.jason.alp_vp.ui.route
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.outlined.List
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +30,7 @@ import androidx.navigation.compose.*
 import com.jason.alp_vp.ui.screens.LoginScreen
 import com.jason.alp_vp.ui.screens.ProfileScreen
 import com.jason.alp_vp.ui.screens.RegisterScreen
+import com.jason.alp_vp.ui.theme.*
 import com.jason.alp_vp.ui.view.*
 import com.jason.alp_vp.ui.view.HomePage
 import com.jason.alp_vp.ui.viewmodel.ForumPageViewModel
@@ -71,7 +73,7 @@ fun AppRoute() {
     }
 
     // Pages that should show the bottom bar
-    val rootPages = listOf(AppView.Forum.name, AppView.Posts.name, AppView.Events.name, AppView.Profile.name)
+    val rootPages = listOf(AppView.Forum.name, AppView.Posts.name, AppView.Profile.name)
 
     // Auth pages (no top/bottom bar)
     val authPages = listOf(AppView.Login.name, AppView.Register.name)
@@ -104,7 +106,6 @@ fun AppRoute() {
                 val items = listOf(
                     BottomNavItem(AppView.Forum, "Home"),
                     BottomNavItem(AppView.Posts, "Posts"),
-                    BottomNavItem(AppView.Events, "Events"),
                     BottomNavItem(AppView.Profile, "Profile")
                 )
                 MyBottomNavigationBar(navController, navBackStackEntry?.destination, items)
@@ -143,7 +144,7 @@ fun AppRoute() {
 
                 HomePage(
                     bountyViewModel = bountyViewModel,
-                    onNavigateToBountyDetail = { bountyId ->
+                    onNavigateToBountyDetail = { bountyId: String ->
                         navController.navigate("bounty_detail/$bountyId")
                     }
                 )
@@ -268,29 +269,73 @@ fun MyBottomNavigationBar(
     currentDestination: NavDestination?,
     items: List<BottomNavItem>
 ) {
-    NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
-        items.forEach { item ->
-            val isSelected = currentDestination?.hierarchy?.any { it.route == item.view.name } == true
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = {
-                    navController.navigate(item.view.name) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                label = { Text(item.label, fontSize = 10.sp) },
-                icon = {
-                    val icon = if (isSelected) item.view.selectedIcon else item.view.unselectedIcon
-                    if (icon != null) Icon(icon, contentDescription = null)
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFF9333EA),
-                    indicatorColor = Color(0xFFF3E8FF),
-                    unselectedIconColor = Color.Gray
+    Surface(
+        color = SurfaceDarkElevated,
+        shadowElevation = 12.dp,
+        tonalElevation = 0.dp
+    ) {
+        NavigationBar(
+            containerColor = Color.Transparent,
+            tonalElevation = 0.dp,
+            modifier = Modifier.height(72.dp)
+        ) {
+            items.forEach { item ->
+                val isSelected = currentDestination?.hierarchy?.any { it.route == item.view.name } == true
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = {
+                        navController.navigate(item.view.name) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    label = {
+                        Text(
+                            text = item.label,
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                        )
+                    },
+                    icon = {
+                        val icon = if (isSelected) item.view.selectedIcon else item.view.unselectedIcon
+                        if (icon != null) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (isSelected) {
+                                            Brush.linearGradient(
+                                                colors = listOf(
+                                                    AccentCyan.copy(alpha = 0.2f),
+                                                    AccentPurple.copy(alpha = 0.2f)
+                                                )
+                                            )
+                                        } else {
+                                            Brush.linearGradient(
+                                                colors = listOf(Color.Transparent, Color.Transparent)
+                                            )
+                                        }
+                                    )
+                                    .padding(8.dp)
+                            ) {
+                                Icon(
+                                    icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AccentCyan,
+                        selectedTextColor = AccentCyan,
+                        indicatorColor = Color.Transparent,
+                        unselectedIconColor = TextSecondary,
+                        unselectedTextColor = TextSecondary
+                    )
                 )
-            )
+            }
         }
     }
 }
@@ -306,20 +351,25 @@ fun MyTopAppBar(
         title = {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
         },
         navigationIcon = {
             if (canNavigateBack) {
                 IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = AccentCyan
+                    )
                 }
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color.White,
-            titleContentColor = Color.Black
+            containerColor = SurfaceDarkElevated,
+            titleContentColor = TextPrimary
         )
     )
 }

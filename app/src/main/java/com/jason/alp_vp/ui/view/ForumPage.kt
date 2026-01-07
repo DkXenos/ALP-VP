@@ -1,7 +1,9 @@
 package com.jason.alp_vp.ui.view
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,16 +18,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jason.alp_vp.ui.theme.*
 import com.jason.alp_vp.ui.viewmodel.ForumPageViewModel
 
-// Colors (dark theme)
-private val Background = Color(0xFF0F1115)
-private val CardBackground = Color(0xFF14161A)
-private val TitleColor = Color(0xFFFFFFFF)
-private val SubText = Color(0xFF98A0B3)
-private val AccentBlue = Color(0xFF2F6BFF)
-private val AccentGreen = Color(0xFF57D06A)
-private val AccentRed = Color(0xFFF85C5C)
 
 @Composable
 fun ForumPage(
@@ -51,47 +46,44 @@ fun ForumPage(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(BackgroundDark)
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            contentPadding = PaddingValues(vertical = 20.dp)
         ) {
             // Error message if any
             errorState?.let { error ->
                 item {
-                    Card(
+                    GlowingCard(
+                        glowColor = StatusError.copy(alpha = 0.4f),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        colors = CardDefaults.cardColors(containerColor = AccentRed.copy(alpha = 0.2f)),
-                        shape = RoundedCornerShape(12.dp)
+                            .padding(horizontal = 20.dp)
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 text = "⚠️ Error Loading Data",
-                                color = AccentRed,
-                                fontSize = 16.sp,
+                                color = StatusError,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
                             Text(
                                 text = error,
-                                color = TitleColor,
+                                color = TextPrimary,
                                 fontSize = 14.sp,
                                 textAlign = TextAlign.Center
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Button(
-                                onClick = { viewModel.refreshData() },
-                                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
-                            ) {
-                                Text("Retry")
-                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            GradientButton(
+                                text = "Retry",
+                                onClick = { viewModel.refreshData() }
+                            )
                         }
                     }
                 }
@@ -102,22 +94,23 @@ fun ForumPage(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Event Posts",
-                        color = TitleColor,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        color = TextPrimary,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp
                     )
                     TextButton(onClick = onNavigateToEventPage) {
                         Text(
                             text = "View All (${events.size})",
-                            color = AccentBlue,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
+                            color = AccentCyan,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -136,7 +129,7 @@ fun ForumPage(
                 items(events.take(2)) { event ->
                     EventCard(
                         event = event,
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 20.dp),
                         onRegister = { viewModel.registerToEvent(it) }
                     )
                 }
@@ -151,22 +144,23 @@ fun ForumPage(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Community Feed",
-                        color = TitleColor,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        color = TextPrimary,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp
                     )
                     TextButton(onClick = onNavigateToPostPage) {
                         Text(
                             text = "View All (${postUis.size})",
-                            color = AccentBlue,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
+                            color = AccentCyan,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -194,13 +188,13 @@ fun ForumPage(
                         onUpvote = { viewModel.upvote(postUi.post.id) },
                         onDownvote = { viewModel.downvote(postUi.post.id) },
                         onClick = { onNavigateToPostDetail(postUi.post.id) },
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(horizontal = 20.dp)
                     )
                 }
             }
 
             item {
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(60.dp))
             }
         }
 
@@ -209,23 +203,24 @@ fun ForumPage(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Background.copy(alpha = 0.7f)),
+                    .background(BackgroundDark.copy(alpha = 0.8f)),
                 contentAlignment = Alignment.Center
             ) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = CardBackground),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
+                GlowingCard {
                     Column(
-                        modifier = Modifier.padding(32.dp),
+                        modifier = Modifier.padding(40.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(color = AccentBlue)
-                        Spacer(modifier = Modifier.height(16.dp))
+                        CircularProgressIndicator(
+                            color = AccentCyan,
+                            strokeWidth = 3.dp
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
                         Text(
                             text = "Loading...",
-                            color = TitleColor,
-                            fontSize = 16.sp
+                            color = TextPrimary,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -241,35 +236,33 @@ private fun EmptyStateCard(
     message: String,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    GlowingCard(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
-        shape = RoundedCornerShape(12.dp)
+            .padding(horizontal = 20.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = icon,
-                fontSize = 48.sp
+                fontSize = 56.sp
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = title,
-                color = TitleColor,
-                fontSize = 18.sp,
+                color = TextPrimary,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = message,
-                color = SubText,
-                fontSize = 14.sp,
+                color = TextSecondary,
+                fontSize = 15.sp,
                 textAlign = TextAlign.Center
             )
         }
@@ -301,16 +294,15 @@ private fun PostCardImproved(
         }
     }
 
-    Card(
+    GlowingCard(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
-        shape = RoundedCornerShape(12.dp),
-        onClick = onClick
+        glowColor = BorderGlow
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .clickable { onClick() }
+                .padding(20.dp)
         ) {
             // Header: Author and timestamp
             Row(
@@ -319,93 +311,134 @@ private fun PostCardImproved(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Avatar
+                    // Avatar with gradient
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .background(AccentBlue, RoundedCornerShape(20.dp)),
+                            .size(44.dp)
+                            .background(
+                                androidx.compose.ui.graphics.Brush.linearGradient(
+                                    colors = listOf(AccentCyan, AccentPurple)
+                                ),
+                                RoundedCornerShape(22.dp)
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = authorName.take(1).uppercase(),
-                            color = Color.White,
-                            fontSize = 18.sp,
+                            color = TextPrimary,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
                             text = authorName,
-                            color = TitleColor,
-                            fontSize = 14.sp,
+                            color = TextPrimary,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = timeAgo,
-                            color = SubText,
-                            fontSize = 12.sp
+                            color = TextSecondary,
+                            fontSize = 13.sp
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Content
             Text(
                 text = content,
-                color = TitleColor,
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
+                color = TextPrimary,
+                fontSize = 15.sp,
+                lineHeight = 22.sp,
                 maxLines = 4,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Actions: Upvote, Downvote, Comments
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Upvote
-                    IconButton(onClick = onUpvote) {
-                        Text("▲", color = AccentGreen, fontSize = 18.sp)
+                // Upvote
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = StatusSuccess.copy(alpha = 0.1f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.2f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = onUpvote,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Text("▲", color = StatusSuccess, fontSize = 16.sp)
+                        }
+                        Text(
+                            text = upvoteCount.toString(),
+                            color = StatusSuccess,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                    Text(
-                        text = upvoteCount.toString(),
-                        color = SubText,
-                        fontSize = 13.sp
-                    )
+                }
 
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Downvote
-                    IconButton(onClick = onDownvote) {
-                        Text("▼", color = AccentRed, fontSize = 18.sp)
+                // Downvote
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = StatusError.copy(alpha = 0.1f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(alpha = 0.2f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = onDownvote,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Text("▼", color = StatusError, fontSize = 16.sp)
+                        }
+                        Text(
+                            text = downvoteCount.toString(),
+                            color = StatusError,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                    Text(
-                        text = downvoteCount.toString(),
-                        color = SubText,
-                        fontSize = 13.sp
-                    )
+                }
 
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    // Comments
-                    Text(
-                        text = "💬",
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "$commentCount comments",
-                        color = SubText,
-                        fontSize = 13.sp
-                    )
+                // Comments
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = AccentCyan.copy(alpha = 0.1f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AccentCyan.copy(alpha = 0.2f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "💬",
+                            fontSize = 16.sp
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "$commentCount",
+                            color = AccentCyan,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
