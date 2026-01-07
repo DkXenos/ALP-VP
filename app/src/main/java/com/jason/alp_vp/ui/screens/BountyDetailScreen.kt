@@ -145,7 +145,7 @@ fun BountyDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = bountyDetail!!.company,  // company is now a string
+                                text = bountyDetail!!.company,
                                 fontSize = 16.sp,
                                 color = SubText
                             )

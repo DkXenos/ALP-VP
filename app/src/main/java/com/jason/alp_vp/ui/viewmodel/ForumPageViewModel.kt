@@ -61,37 +61,52 @@ class ForumPageViewModel(
         }
 
     init {
+        Log.d("ForumPageViewModel", "=== INITIALIZING FORUM PAGE VIEW MODEL ===")
         loadData()
     }
 
     private fun loadData() {
+        Log.d("ForumPageViewModel", "=== LOAD DATA CALLED ===")
         viewModelScope.launch {
             _isLoading.value = true
             _errorState.value = null
 
             try {
+                Log.d("ForumPageViewModel", "Starting to load events and posts...")
+
                 // Load events from backend via repository
                 val eventsList = try {
-                    container.eventRepository.getAllEvents()
+                    Log.d("ForumPageViewModel", "Calling eventRepository.getAllEvents()...")
+                    val events = container.eventRepository.getAllEvents()
+                    Log.d("ForumPageViewModel", "✅ Loaded ${events.size} events successfully")
+                    events
                 } catch (e: Exception) {
-                    Log.e("ForumPageVM", "Failed to load events", e)
+                    Log.e("ForumPageViewModel", "❌ Failed to load events: ${e.message}", e)
                     emptyList<Event>()
                 }
 
                 // Load posts from backend via repository
                 val postsList = try {
-                    container.postRepository.getAllPosts()
+                    Log.d("ForumPageViewModel", "Calling postRepository.getAllPosts()...")
+                    val posts = container.postRepository.getAllPosts()
+                    Log.d("ForumPageViewModel", "✅ Loaded ${posts.size} posts successfully")
+                    posts.forEachIndexed { index, post ->
+                        Log.d("ForumPageViewModel", "  Post $index: id=${post.id}, user=${post.authorName}, content=${post.content.take(50)}...")
+                    }
+                    posts
                 } catch (e: Exception) {
-                    Log.e("ForumPageVM", "Failed to load posts", e)
+                    Log.e("ForumPageViewModel", "❌ Failed to load posts: ${e.message}", e)
                     emptyList<Post>()
                 }
 
+                Log.d("ForumPageViewModel", "Setting events and posts to state...")
                 _events.value = eventsList
                 _posts.value = postsList
                 recomputePostUis(postsList)
+                Log.d("ForumPageViewModel", "✅ State updated - events: ${eventsList.size}, posts: ${postsList.size}, postUis: ${_postUis.value.size}")
 
             } catch (e: Exception) {
-                Log.e("ForumPageVM", "Unexpected error while loading data", e)
+                Log.e("ForumPageViewModel", "❌ Unexpected error while loading data", e)
                 _errorState.value = "Failed to load data: ${e.message}"
                 // Set safe default values
                 _events.value = emptyList()
@@ -99,12 +114,14 @@ class ForumPageViewModel(
                 _postUis.value = emptyList()
             } finally {
                 _isLoading.value = false
+                Log.d("ForumPageViewModel", "=== LOAD DATA COMPLETED ===")
             }
         }
     }
 
     // Add utility methods for production stability
     fun refreshData() {
+        Log.d("ForumPageViewModel", "=== REFRESH DATA CALLED MANUALLY ===")
         loadData()
     }
 

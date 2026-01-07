@@ -7,28 +7,28 @@ import retrofit2.http.*
 
 interface PostService {
 
-    @POST("/posts")
+    @POST("posts")
     suspend fun createPost(
         @Body request: PostRequest,
         @Header("Authorization") token: String
     ): Response<ApiResponseWrapper<PostResponseItem>>
 
-    @GET("/posts")
+    @GET("posts")
     suspend fun getAllPosts(): Response<ApiResponseWrapper<List<PostResponseItem>>>
 
-    @GET("/posts/{id}")
+    @GET("posts/{id}")
     suspend fun getPostById(
         @Path("id") id: Int
     ): Response<ApiResponseWrapper<PostResponseItem>>
 
-    @PUT("/posts/{id}")
+    @PUT("posts/{id}")
     suspend fun updatePost(
         @Path("id") id: Int,
         @Body request: UpdatePostRequest,
         @Header("Authorization") token: String
     ): Response<ApiResponseWrapper<PostResponseItem>>
 
-    @DELETE("/posts/{id}")
+    @DELETE("posts/{id}")
     suspend fun deletePost(
         @Path("id") id: Int,
         @Header("Authorization") token: String

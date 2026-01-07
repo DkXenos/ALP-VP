@@ -52,8 +52,31 @@ class BountyViewModel(
 
                 if (response.isSuccessful && response.body() != null) {
                     val bountiesResponse = response.body()!!
-                    Log.d("BountyViewModel", "Loaded ${bountiesResponse.data.size} bounties")
-                    _bounties.value = bountiesResponse.data.map { it.toUiModel() }
+                    Log.d("BountyViewModel", "Loaded ${bountiesResponse.data.size} bounties from API")
+
+                    // Debug log each bounty
+                    bountiesResponse.data.forEachIndexed { index, item ->
+                        Log.d("BountyViewModel", "Bounty $index: id=${item.id}, title=${item.title}, company=${item.company}")
+                    }
+
+                    // Filter and map with detailed error handling
+                    val mappedBounties = bountiesResponse.data
+                        .mapNotNull { item ->
+                            try {
+                                if (item.id.isBlank()) {
+                                    Log.w("BountyViewModel", "Skipping bounty with blank ID: ${item.title}")
+                                    null
+                                } else {
+                                    item.toUiModel()
+                                }
+                            } catch (e: Exception) {
+                                Log.e("BountyViewModel", "Error mapping bounty ${item.id}: ${e.message}", e)
+                                null
+                            }
+                        }
+
+                    _bounties.value = mappedBounties
+                    Log.d("BountyViewModel", "Successfully mapped ${mappedBounties.size} bounties")
                 } else {
                     val errorMsg = "Failed to load bounties: ${response.code()} - ${response.message()}"
                     Log.e("BountyViewModel", errorMsg)
@@ -79,8 +102,31 @@ class BountyViewModel(
 
                 if (response.isSuccessful && response.body() != null) {
                     val myBountiesResponse = response.body()!!
-                    Log.d("BountyViewModel", "Loaded ${myBountiesResponse.data.size} claimed bounties")
-                    _myBounties.value = myBountiesResponse.data.map { it.toUiModel() }
+                    Log.d("BountyViewModel", "Loaded ${myBountiesResponse.data.size} claimed bounties from API")
+
+                    // Debug log each bounty
+                    myBountiesResponse.data.forEachIndexed { index, item ->
+                        Log.d("BountyViewModel", "MyBounty $index: id=${item.bounty_id}, title=${item.title}, company=${item.company}")
+                    }
+
+                    // Filter and map with detailed error handling
+                    val mappedBounties = myBountiesResponse.data
+                        .mapNotNull { item ->
+                            try {
+                                if (item.bounty_id.isBlank()) {
+                                    Log.w("BountyViewModel", "Skipping my bounty with blank ID: ${item.title}")
+                                    null
+                                } else {
+                                    item.toUiModel()
+                                }
+                            } catch (e: Exception) {
+                                Log.e("BountyViewModel", "Error mapping my bounty ${item.bounty_id}: ${e.message}", e)
+                                null
+                            }
+                        }
+
+                    _myBounties.value = mappedBounties
+                    Log.d("BountyViewModel", "Successfully mapped ${mappedBounties.size} my bounties")
                 } else {
                     val errorMsg = "Failed to load my bounties: ${response.code()}"
                     Log.e("BountyViewModel", errorMsg)

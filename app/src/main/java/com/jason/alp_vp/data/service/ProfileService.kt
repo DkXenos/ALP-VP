@@ -84,8 +84,7 @@ data class EventItem(
 data class ProfileBountyItem(
     val id: String,
     val title: String,
-    val company: String,  // Company name returned as string by API
-    val companyId: Int? = null,  // Company ID if needed separately
+    val company: CompanyInfo?,  // PROFILE endpoint returns company as OBJECT
     val deadline: String,
     val rewardXp: Int,
     val rewardMoney: Int,

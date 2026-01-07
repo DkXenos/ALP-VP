@@ -35,8 +35,9 @@ fun HomePage(
     val isLoadingBounties by bountyViewModel.isLoading.collectAsState()
     val bountyError by bountyViewModel.error.collectAsState()
 
-    // Load my bounties when screen loads
+    // Load bounties when screen loads
     LaunchedEffect(Unit) {
+        bountyViewModel.loadAllBounties()
         bountyViewModel.loadMyBounties()
     }
 

@@ -6,41 +6,41 @@ import retrofit2.http.*
 
 interface EventService {
 
-    @POST("/events")
+    @POST("events")
     suspend fun createEvent(
         @Body event: CreateEventRequest
     ): Response<ApiResponseWrapper<EventResponseItem>>
 
-    @GET("/events")
+    @GET("events")
     suspend fun getAllEvents(): Response<ApiResponseWrapper<List<EventResponseItem>>>
 
-    @GET("/events/{id}")
+    @GET("events/{id}")
     suspend fun getEventById(
         @Path("id") id: Int
     ): Response<ApiResponseWrapper<EventResponseItem>>
 
-    @PUT("/events/{id}")
+    @PUT("events/{id}")
     suspend fun updateEvent(
         @Path("id") id: Int,
         @Body event: UpdateEventRequest
     ): Response<ApiResponseWrapper<EventResponseItem>>
 
-    @DELETE("/events/{id}")
+    @DELETE("events/{id}")
     suspend fun deleteEvent(
         @Path("id") id: Int
     ): Response<Unit>
 
-    @GET("/companies/{companyId}/events")
+    @GET("companies/{companyId}/events")
     suspend fun getEventsByCompany(
         @Path("companyId") companyId: String
     ): Response<ApiResponseWrapper<List<EventResponseItem>>>
 
-    @POST("/events/register")
+    @POST("events/register")
     suspend fun registerToEvent(
         @Body registration: EventRegistrationRequest
     ): Response<ApiResponseWrapper<EventResponseItem>>
 
-    @DELETE("/events/{eventId}/users/{userId}")
+    @DELETE("events/{eventId}/users/{userId}")
     suspend fun unregisterFromEvent(
         @Path("eventId") eventId: Int,
         @Path("userId") userId: Int

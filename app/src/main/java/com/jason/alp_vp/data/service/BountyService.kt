@@ -132,9 +132,8 @@ data class BountyItem(
     val winner_id: Int?,
 
     // Relations (populated by backend)
-    val company: String,  // Company name returned as string by API
-    val companyId: Int? = null,  // Company ID if needed separately
-    val isOwner: Boolean = false,  // Whether current user is the owner
+    val company: String,  // Company name as STRING
+    val isOwner: Boolean = false,
     val winner: UserInfo?,
     val assignments: List<BountyAssignmentItem>? = null
 )
@@ -204,8 +203,7 @@ data class MyBountyItem(
     val submission_notes: String?,
 
     // Relations
-    val company: String,  // Company name returned as string by API
-    val companyId: Int? = null  // Company ID if needed separately
+    val company: String  // Company name as STRING
 )
 
 data class DeleteBountyResponse(
