@@ -75,7 +75,7 @@ class BountyViewModel(
             _error.value = null
             try {
                 Log.d("BountyViewModel", "Loading my bounties...")
-                val response = bountyService.getMyClaimedBounties()
+                val response = bountyService.getMyBounties()
 
                 if (response.isSuccessful && response.body() != null) {
                     val myBountiesResponse = response.body()!!

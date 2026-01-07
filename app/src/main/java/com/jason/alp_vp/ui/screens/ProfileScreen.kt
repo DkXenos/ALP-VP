@@ -731,7 +731,7 @@ private fun BountyItemCard(bounty: ProfileBountyItem) {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = bounty.company?.name ?: "Unknown Company",
+                        text = bounty.company,  // company is now a string
                         color = SubText,
                         fontSize = 14.sp
                     )

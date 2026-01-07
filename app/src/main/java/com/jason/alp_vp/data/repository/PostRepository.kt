@@ -51,12 +51,12 @@ class PostRepository(
         }
         return Post(
             id = item.id,
-            userId = item.userId,
-            authorName = item.author.username,
-            authorEmail = item.author.email,
+            userId = item.user_id,
+            authorName = item.username,  // Flattened from nested author.username
+            authorEmail = "",  // Not provided in flattened API response
             content = item.content,
-            image = item.image?.toString(),
-            createdAt = try { Instant.parse(item.createdAt) } catch (_: Exception) { Instant.now() },
+            image = item.image,
+            createdAt = try { Instant.parse(item.created_at) } catch (_: Exception) { Instant.now() },
             comments = comments
         )
     }

@@ -9,7 +9,7 @@ data class UserData(
     val id: Int,
     val username: String?,
     val email: String,
-    val role: String,
+    val role: String? = null,  // Make nullable with default since backend doesn't always send it
     val token: String
 )
 

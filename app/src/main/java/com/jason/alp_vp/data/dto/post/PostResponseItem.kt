@@ -1,10 +1,25 @@
 package com.jason.alp_vp.data.dto.post
 
 data class PostResponseItem(
-    val author: Author,
-    val content: String,
-    val createdAt: String,
     val id: Int,
-    val image: Any,
-    val userId: Int
+    val user_id: Int,
+    val username: String,  // Flattened - NOT nested in author object
+    val content: String,
+    val image: String?,
+    val created_at: String,
+    val comments: List<CommentItem>? = null
+)
+
+data class CommentItem(
+    val id: Int,
+    val post_id: Int,
+    val content: String,
+    val created_at: String,
+    val commentVotes: List<CommentVote>? = null
+)
+
+data class CommentVote(
+    val id: Int,
+    val vote_type: String,  // "upvote" or "downvote"
+    val comment_id: Int
 )

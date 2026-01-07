@@ -7,7 +7,6 @@ import com.jason.alp_vp.data.container.AppContainer
 import com.jason.alp_vp.data.service.Applicant
 import com.jason.alp_vp.data.service.BountyItem
 import com.jason.alp_vp.data.service.BountySubmitDto
-import com.jason.alp_vp.data.service.BountyAssignDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -70,9 +69,6 @@ class BountyDetailViewModel(
             _isLoading.value = true
             _error.value = null
             try {
-                // Gunakan assignBounty sebagai alternatif untuk claimBounty
-                val request = BountyAssignDto()
-                val response = bountyService.assignBounty(bountyId, request)
                 val response = bountyService.claimBounty(bountyId)
 
                 if (response.isSuccessful) {
@@ -105,11 +101,20 @@ class BountyDetailViewModel(
                 val userData = com.jason.alp_vp.utils.TokenManager.getUserData()
                 val userId = userData?.id ?: throw Exception("User not logged in")
 
-                // Use bountyRepository to submit bounty
-                container.bountyRepository.submitBounty(bountyId, userId, submissionUrl, submissionNotes)
-                Log.d("BountyDetailViewModel", "Work submitted successfully")
-                _submitSuccess.value = true
-                // Reload bounty to get updated submission status
+                // Submit work via BountyService
+                val request = BountySubmitDto(
+                    user_id = userId,
+                    bounty_id = bountyId,
+                    is_completed = true,
+                    submission_url = submissionUrl,
+                    submission_notes = submissionNotes
+                )
+                val response = bountyService.submitBounty(bountyId, request)
+
+                if (response.isSuccessful) {
+                    Log.d("BountyDetailViewModel", "Work submitted successfully")
+                    _submitSuccess.value = true
+                    // Reload bounty to get updated submission status
                     loadBountyDetail(bountyId)
                 } else {
                     val errorMsg = "Failed to submit work: ${response.code()} - ${response.message()}"
@@ -132,30 +137,25 @@ class BountyDetailViewModel(
             _error.value = null
             try {
                 Log.d("BountyDetailViewModel", "Loading applicants for bounty: $bountyId")
-                // Gunakan getMyClaimedBounties sebagai alternatif karena getBountyApplicants tidak tersedia
-                // Ini akan memberikan daftar bounty yang diklaim oleh user
-                val response = bountyService.getMyClaimedBounties()
+                val response = bountyService.getBountyApplicants(bountyId)
 
                 if (response.isSuccessful && response.body() != null) {
-                    // Filter untuk bounty yang dimaksud dan convert ke Applicant list
-                    val claimedBounties = response.body()!!.data
-                    val applicantsFromBounties = claimedBounties
-                        .filter { it.bounty_id == bountyId }
-                        .map { bountyItem ->
-                            Applicant(
-                                userId = bountyItem.company_id, // Gunakan company_id sebagai userId sementara
-                                username = null,
-                                email = "user@example.com", // Default email
-                                claimedAt = bountyItem.assigned_at,
-                                submissionUrl = bountyItem.submission_url,
-                                submissionNotes = bountyItem.submission_notes,
-                                submittedAt = bountyItem.completed_at,
-                                isWinner = bountyItem.is_completed
-                            )
-                        }
+                    val assignments = response.body()!!.data
+                    val applicantsList = assignments.map { assignment ->
+                        Applicant(
+                            userId = assignment.user_id,
+                            username = assignment.user?.username,
+                            email = assignment.user?.email ?: "",
+                            claimedAt = assignment.assigned_at,
+                            submissionUrl = assignment.submission_url,
+                            submissionNotes = assignment.submission_notes,
+                            submittedAt = assignment.completed_at,
+                            isWinner = assignment.is_completed
+                        )
+                    }
 
-                    _applicants.value = applicantsFromBounties
-                    Log.d("BountyDetailViewModel", "Applicants loaded: ${applicantsFromBounties.size}")
+                    _applicants.value = applicantsList
+                    Log.d("BountyDetailViewModel", "Applicants loaded: ${applicantsList.size}")
                 } else {
                     val errorMsg = "Failed to load applicants: ${response.code()} - ${response.message()}"
                     Log.e("BountyDetailViewModel", errorMsg)
@@ -178,12 +178,13 @@ class BountyDetailViewModel(
             _isLoading.value = true
             _error.value = null
             try {
-                container.bountyRepository.selectWinner(bountyId, userId)
-                Log.d("BountyDetailViewModel", "Winner selected successfully")
-                _winnerSelected.value = true
-                // Reload bounty and applicants to reflect winner status
-                loadBountyDetail(bountyId)
-                loadApplicants(bountyId)
+                val response = bountyService.selectWinner(bountyId, userId.toString())
+
+                if (response.isSuccessful) {
+                    Log.d("BountyDetailViewModel", "Winner selected successfully")
+                    _winnerSelected.value = true
+                    // Reload bounty and applicants to reflect winner status
+                    loadBountyDetail(bountyId)
                     loadApplicants(bountyId)
                 } else {
                     val errorMsg = "Failed to select winner: ${response.code()} - ${response.message()}"

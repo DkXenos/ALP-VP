@@ -63,6 +63,7 @@ data class CompanyAuthResponse(
     val company: CompanyResponse
 )
 
+
 data class CompanyResponse(
     val id: String,
     val name: String,

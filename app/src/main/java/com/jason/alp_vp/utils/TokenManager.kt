@@ -28,12 +28,12 @@ object TokenManager {
         return prefs.getString(KEY_TOKEN, null)
     }
 
-    fun saveUserData(id: Int, username: String?, email: String, role: String) {
+    fun saveUserData(id: Int, username: String?, email: String, role: String? = null) {
         prefs.edit().apply {
             putInt(KEY_USER_ID, id)
             putString(KEY_USERNAME, username ?: email.substringBefore("@"))  // Use email prefix if username is null
             putString(KEY_EMAIL, email)
-            putString(KEY_ROLE, role)
+            putString(KEY_ROLE, role ?: "USER")  // Default to "USER" if role is null
             apply()
         }
     }
@@ -46,6 +46,25 @@ object TokenManager {
         return prefs.getString(KEY_USERNAME, null)
     }
 
+    fun getEmail(): String? {
+        return prefs.getString(KEY_EMAIL, null)
+    }
+
+    fun getRole(): String? {
+        return prefs.getString(KEY_ROLE, null)
+    }
+
+    fun getUserData(): UserData? {
+        val id = getUserId()
+        if (id == -1) return null
+        return UserData(
+            id = id,
+            username = getUsername(),
+            email = getEmail() ?: "",
+            role = getRole() ?: "user"
+        )
+    }
+
     fun isLoggedIn(): Boolean {
         return getToken() != null
     }
@@ -54,4 +73,11 @@ object TokenManager {
         prefs.edit().clear().apply()
     }
 }
+
+data class UserData(
+    val id: Int,
+    val username: String?,
+    val email: String,
+    val role: String
+)
 

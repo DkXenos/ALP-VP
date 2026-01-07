@@ -85,8 +85,14 @@ class AuthViewModel(
                     )
                 } else {
                     // User login - standard response structure
+                    Log.d("AuthViewModel", "Attempting user login for: $email")
                     val response = api.login(LoginRequest(email = email, password = password))
                     _authResponse.value = response
+
+                    Log.d("AuthViewModel", "User login successful!")
+                    Log.d("AuthViewModel", "User ID: ${response.data.id}")
+                    Log.d("AuthViewModel", "Username: ${response.data.username}")
+                    Log.d("AuthViewModel", "Role from backend: ${response.data.role}")
 
                     // Save token and user data
                     TokenManager.saveToken(response.data.token)
@@ -94,7 +100,7 @@ class AuthViewModel(
                         id = response.data.id,
                         username = response.data.username ?: response.data.email.substringBefore("@"),
                         email = response.data.email,
-                        role = response.data.role
+                        role = response.data.role  // Will default to "USER" if null
                     )
                 }
 
@@ -110,32 +116,131 @@ class AuthViewModel(
         }
     }
 
-    fun register(username: String, email: String, password: String, role: String = "TALENT") {
+    fun register(username: String, email: String, password: String, role: String = "USER") {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             try {
-                val response = api.register(
-                    RegisterRequest(
-                        username = username,
-                        email = email,
-                        password = password,
-                        role = role
-                    )
-                )
-                _authResponse.value = response
+                Log.d("AuthViewModel", "Registering with role: $role")
 
-                // Save token and user data
-                TokenManager.saveToken(response.data.token)
-                TokenManager.saveUserData(
-                    id = response.data.id,
-                    username = response.data.username ?: response.data.email.substringBefore("@"),  // Use email prefix if username is null
-                    email = response.data.email,
-                    role = response.data.role
-                )
-                _isLoggedIn.value = true
+                if (role == "COMPANY") {
+                    // Company registration - use company service
+                    Log.d("AuthViewModel", "=== COMPANY REGISTRATION START ===")
+                    Log.d("AuthViewModel", "Email: $email, Name: $username")
+
+                    val companyResponse = container.companyService.register(
+                        com.jason.alp_vp.data.service.CompanyRegisterRequest(
+                            name = username,
+                            email = email,
+                            password = password,
+                            description = null
+                        )
+                    )
+
+                    Log.d("AuthViewModel", "Response code: ${companyResponse.code()}")
+                    Log.d("AuthViewModel", "Response message: ${companyResponse.message()}")
+                    Log.d("AuthViewModel", "Response headers: ${companyResponse.headers()}")
+
+                    // Log raw response body for debugging
+                    try {
+                        val rawBody = companyResponse.raw().peekBody(Long.MAX_VALUE).string()
+                        Log.d("AuthViewModel", "Raw response body: $rawBody")
+                    } catch (e: Exception) {
+                        Log.e("AuthViewModel", "Could not read raw body: ${e.message}")
+                    }
+
+                    if (!companyResponse.isSuccessful) {
+                        val errorBody = companyResponse.errorBody()?.string()
+                        Log.e("AuthViewModel", "Error body: $errorBody")
+                        _error.value = "Registration failed: ${companyResponse.code()} - $errorBody"
+                        throw Exception("Registration failed: ${companyResponse.code()}")
+                    }
+
+                    val body = companyResponse.body()
+                    if (body == null) {
+                        Log.e("AuthViewModel", "Response body is null!")
+                        throw Exception("Company registration failed: Empty response")
+                    }
+
+                    Log.d("AuthViewModel", "✅ Company registration successful!")
+                    Log.d("AuthViewModel", "Token: ${body.token.take(20)}...")
+                    Log.d("AuthViewModel", "Company ID: ${body.company.id}")
+                    Log.d("AuthViewModel", "Company name: ${body.company.name}")
+                    Log.d("AuthViewModel", "Company email: ${body.company.email}")
+
+                    // Save token and company data
+                    TokenManager.saveToken(body.token)
+
+                    // Handle String ID from backend - try to parse or use hash code
+                    val companyId = body.company.id.toIntOrNull() ?: body.company.id.hashCode()
+                    Log.d("AuthViewModel", "Parsed company ID: $companyId")
+
+                    TokenManager.saveUserData(
+                        id = companyId,
+                        username = body.company.name,
+                        email = body.company.email,
+                        role = "COMPANY"
+                    )
+
+                    // Create compatible AuthResponse for state
+                    _authResponse.value = com.jason.alp_vp.model.AuthResponse(
+                        data = com.jason.alp_vp.model.UserData(
+                            id = companyId,
+                            username = body.company.name,
+                            email = body.company.email,
+                            role = "COMPANY",
+                            token = body.token
+                        )
+                    )
+                    _isLoggedIn.value = true
+                    Log.d("AuthViewModel", "=== COMPANY REGISTRATION COMPLETE ===")
+                } else {
+                    // User registration - use standard auth endpoint with role "USER"
+                    Log.d("AuthViewModel", "Attempting user registration for: $email")
+                    val response = api.register(
+                        RegisterRequest(
+                            username = username,
+                            email = email,
+                            password = password,
+                            role = "USER"  // Explicitly set to "USER"
+                        )
+                    )
+                    _authResponse.value = response
+
+                    // Save token and user data
+                    TokenManager.saveToken(response.data.token)
+                    TokenManager.saveUserData(
+                        id = response.data.id,
+                        username = response.data.username ?: response.data.email.substringBefore("@"),
+                        email = response.data.email,
+                        role = response.data.role
+                    )
+                    _isLoggedIn.value = true
+                }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Registration failed"
+                Log.e("AuthViewModel", "Registration failed", e)
+                Log.e("AuthViewModel", "Exception type: ${e.javaClass.simpleName}")
+                Log.e("AuthViewModel", "Exception message: ${e.message}")
+                Log.e("AuthViewModel", "Exception cause: ${e.cause?.message}")
+
+                // Extract more meaningful error message
+                val errorMessage = when {
+                    e.message?.contains("HTTP 400") == true -> {
+                        "Invalid registration data. Please check your inputs."
+                    }
+                    e.message?.contains("HTTP 409") == true -> {
+                        "Email already exists. Please use a different email."
+                    }
+                    e.message?.contains("HTTP 500") == true -> {
+                        "Server error. Please try again later."
+                    }
+                    e.message?.contains("Unable to resolve host") == true -> {
+                        "Cannot connect to server. Check your internet connection."
+                    }
+                    else -> e.message ?: "Registration failed. Please try again."
+                }
+
+                _error.value = errorMessage
             } finally {
                 _isLoading.value = false
             }

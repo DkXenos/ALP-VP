@@ -12,7 +12,7 @@ data class RegisterRequest(
     val username: String,
     val email: String,
     val password: String,
-    val role: String = "TALENT"
+    val role: String = "USER"  // Default to USER role
 )
 
 // For Login - only email and password

@@ -1,5 +1,4 @@
 package com.jason.alp_vp.data.container
-
 import com.jason.alp_vp.data.repository.UserRepository
 import com.jason.alp_vp.data.repository.CommentRepository
 import com.jason.alp_vp.data.repository.EventRepository
@@ -11,6 +10,7 @@ import com.jason.alp_vp.utils.TokenManager
 import okhttp3.OkHttpClient
 import okhttp3.Interceptor
 import okhttp3.Response
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -18,12 +18,18 @@ import java.util.concurrent.TimeUnit
 class AppContainer {
     companion object {
         // Use localhost for reliable connection (run: adb reverse tcp:3000 tcp:3000)
-        private const val BASE_URL = "http://127.0.0.1:3000/api/"
+        private const val BASE_URL = "http://192.168.20.12:3000/api/"
     }
 
-    // OkHttp client with JWT token interceptor
+    // OkHttp client with JWT token interceptor and logging
     private val okHttpClient: OkHttpClient by lazy {
+        // Add logging interceptor
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY // Log request and response bodies
+        }
+
         OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor) // Add logging first
             .addInterceptor(object : Interceptor {
                 override fun intercept(chain: Interceptor.Chain): Response {
                     val original = chain.request()
@@ -96,6 +102,10 @@ class AppContainer {
 
     // ===== Repositories (Lazy Initialization) =====
 
+    val commentRepository: CommentRepository by lazy {
+        CommentRepository(commentService)
+    }
+
     val eventRepository: EventRepository by lazy {
         EventRepository(eventService)
     }
@@ -104,20 +114,8 @@ class AppContainer {
         PostRepository(postService, commentRepository)
     }
 
-    val voteRepository: com.jason.alp_vp.data.repository.VoteRepository by lazy {
-        com.jason.alp_vp.data.repository.VoteRepository(voteService)
-    }
-
-    val commentRepository: CommentRepository by lazy {
-        CommentRepository(commentService)
-    }
-
-    val eventRepository: EventRepository by lazy {
-       EventRepository(eventService)
-    }
-
-    val postRepository: PostRepository by lazy {
-        PostRepository(postService, commentRepository)
+    val voteRepository: VoteRepository by lazy {
+        VoteRepository(voteService)
     }
 
     val companyRepository: CompanyRepository by lazy {

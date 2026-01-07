@@ -129,12 +129,12 @@ class EventRepository(private val service: EventService) {
             id = item.id,
             title = item.title,
             description = item.description,
-            eventDate = try { Instant.parse(item.eventDate) } catch (_: Exception) { Instant.now() },
-            companyId = item.companyId,
-            companyName = item.company.name,
-            registeredQuota = item.registeredQuota,
-            currentRegistrations = item.currentRegistrations,
-            createdAt = try { Instant.parse(item.createdAt) } catch (_: Exception) { Instant.now() }
+            eventDate = try { Instant.parse(item.event_date) } catch (_: Exception) { Instant.now() },
+            companyId = item.company_id,
+            companyName = item.company_name,  // Flattened from nested company.name
+            registeredQuota = item.registered_quota,
+            currentRegistrations = item.current_registrations,
+            createdAt = try { Instant.parse(item.created_at) } catch (_: Exception) { Instant.now() }
         )
     }
 }

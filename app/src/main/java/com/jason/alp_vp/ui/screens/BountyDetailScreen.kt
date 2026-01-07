@@ -145,7 +145,7 @@ fun BountyDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = bountyDetail!!.company ?: bountyDetail!!.companyName ?: "Unknown Company",
+                                text = bountyDetail!!.company,  // company is now a string
                                 fontSize = 16.sp,
                                 color = SubText
                             )
@@ -248,7 +248,8 @@ fun BountyDetailScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Submission Status Card (if work has been submitted)
-                        if (!bountyDetail!!.submissionUrl.isNullOrBlank()) {
+                        val currentUserSubmission = bountyDetail!!.assignments?.firstOrNull()
+                        if (currentUserSubmission?.submission_url != null) {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = CardBackground),
@@ -278,12 +279,12 @@ fun BountyDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = bountyDetail!!.submissionUrl!!,
+                                        text = currentUserSubmission.submission_url!!,
                                         fontSize = 14.sp,
                                         color = AccentBlue,
                                         fontWeight = FontWeight.Medium
                                     )
-                                    if (!bountyDetail!!.submissionNotes.isNullOrBlank()) {
+                                    if (!currentUserSubmission.submission_notes.isNullOrBlank()) {
                                         Spacer(modifier = Modifier.height(12.dp))
                                         Text(
                                             text = "Notes:",
@@ -292,15 +293,15 @@ fun BountyDetailScreen(
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = bountyDetail!!.submissionNotes!!,
+                                            text = currentUserSubmission.submission_notes!!,
                                             fontSize = 14.sp,
                                             color = TitleColor
                                         )
                                     }
-                                    if (!bountyDetail!!.submittedAt.isNullOrBlank()) {
+                                    if (!currentUserSubmission.completed_at.isNullOrBlank()) {
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            text = "Submitted: ${formatDate(bountyDetail!!.submittedAt!!)}",
+                                            text = "Submitted: ${formatDate(currentUserSubmission.completed_at!!)}",
                                             fontSize = 12.sp,
                                             color = SubText
                                         )
@@ -329,9 +330,10 @@ fun BountyDetailScreen(
                             .padding(16.dp),
                         contentAlignment = Alignment.BottomCenter
                     ) {
+                        val currentUserSubmission = bountyDetail!!.assignments?.firstOrNull()
                         when {
                             // Already submitted work
-                            !bountyDetail!!.submissionUrl.isNullOrBlank() -> {
+                            currentUserSubmission?.submission_url != null -> {
                                 Button(
                                     onClick = { },
                                     modifier = Modifier
@@ -350,7 +352,7 @@ fun BountyDetailScreen(
                                 }
                             }
                             // User has claimed, can submit work
-                            bountyDetail!!.claimedBy != null -> {
+                            !bountyDetail!!.assignments.isNullOrEmpty() -> {
                                 Button(
                                     onClick = { showSubmitDialog = true },
                                     modifier = Modifier

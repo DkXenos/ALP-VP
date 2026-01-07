@@ -170,7 +170,7 @@ class CompanyProfileViewModel(
                         amount = -amount,
                         type = "withdrawal",
                         description = "Withdrawal to payment method",
-                        createdAt = "2024-01-01",
+                        createdAt = java.time.Instant.now(),
                         status = "completed"
                     )
                     _walletHistory.value = _walletHistory.value + transaction

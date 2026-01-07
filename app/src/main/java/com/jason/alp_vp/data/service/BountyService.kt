@@ -132,7 +132,8 @@ data class BountyItem(
     val winner_id: Int?,
 
     // Relations (populated by backend)
-    val company: BountyCompanyInfo?,
+    val company: String,  // Company name returned as string by API
+    val companyId: Int? = null,  // Company ID if needed separately
     val winner: UserInfo?,
     val assignments: List<BountyAssignmentItem>? = null
 )
@@ -202,7 +203,8 @@ data class MyBountyItem(
     val submission_notes: String?,
 
     // Relations
-    val company: BountyCompanyInfo?
+    val company: String,  // Company name returned as string by API
+    val companyId: Int? = null  // Company ID if needed separately
 )
 
 data class DeleteBountyResponse(
@@ -216,7 +218,7 @@ fun BountyItem.toUiModel(): Bounty {
     return Bounty(
         id = this.id,
         title = this.title,
-        company = this.company?.name ?: "Unknown Company",
+        company = this.company,  // Already a string
         deadline = this.deadline,
         rewardXp = this.rewardXp,
         rewardMoney = this.rewardMoney,
@@ -231,7 +233,7 @@ fun MyBountyItem.toUiModel(): Bounty {
     return Bounty(
         id = this.bounty_id,
         title = this.title,
-        company = this.company?.name ?: "Unknown Company",
+        company = this.company,  // Already a string
         deadline = this.deadline,
         rewardXp = this.rewardXp,
         rewardMoney = this.rewardMoney,
