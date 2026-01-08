@@ -2,9 +2,9 @@ package com.jason.alp_vp.utils
 
 /**
  * XP Level System:
- * - Level 1-9: Requires 100 XP per level
- * - Level 10-19: Requires 150 XP per level
- * - Level 20-29: Requires 200 XP per level
+ * - Level 1-10: Requires 100 XP per level
+ * - Level 11-20: Requires 150 XP per level
+ * - Level 21-30: Requires 200 XP per level
  * - And so on... (+50 XP requirement every 10 levels)
  */
 object XpLevelCalculator {
@@ -49,13 +49,13 @@ object XpLevelCalculator {
 
     /**
      * Get XP required for a specific level
-     * Level 1-9: 100 XP
-     * Level 10-19: 150 XP
-     * Level 20-29: 200 XP
+     * Level 1-10: 100 XP
+     * Level 11-20: 150 XP
+     * Level 21-30: 200 XP
      * etc.
      */
     private fun getXpForLevel(level: Int): Int {
-        val tier = (level - 1) / 10  // 0 for levels 1-9, 1 for 10-19, etc.
+        val tier = (level - 1) / 10  // 0 for levels 1-10, 1 for 11-20, etc.
         return 100 + (tier * 50)
     }
 

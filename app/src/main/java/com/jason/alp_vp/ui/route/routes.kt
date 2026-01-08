@@ -162,17 +162,18 @@ fun AppRoute() {
             composable(AppView.Active.name) {
                 val profileViewModel: com.jason.alp_vp.ui.viewmodel.ProfileViewModel = viewModel()
 
-                // Refresh profile when navigating to this screen
-                LaunchedEffect(currentRoute) {
-                    if (currentRoute == AppView.Active.name) {
-                        profileViewModel.loadProfile()
-                    }
+                // Only refresh if we don't have data yet
+                LaunchedEffect(Unit) {
+                    profileViewModel.loadProfile()
                 }
 
                 ActiveBountiesScreen(
                     profileViewModel = profileViewModel,
                     onNavigateToBountyDetail = { bountyId: String ->
                         navController.navigate("bounty_detail/$bountyId")
+                    },
+                    onNavigateToSubmission = { bountyId: String ->
+                        navController.navigate("submission/$bountyId")
                     }
                 )
             }
@@ -264,11 +265,9 @@ fun AppRoute() {
             composable(AppView.Profile.name) {
                 val profileViewModel: com.jason.alp_vp.ui.viewmodel.ProfileViewModel = viewModel()
 
-                // Refresh profile when navigating to this screen
-                LaunchedEffect(currentRoute) {
-                    if (currentRoute == AppView.Profile.name) {
-                        profileViewModel.refresh()
-                    }
+                // Only refresh when first loading
+                LaunchedEffect(Unit) {
+                    profileViewModel.refresh()
                 }
 
                 ProfileScreen(
@@ -326,6 +325,17 @@ fun AppRoute() {
                 )
             }
 
+            // Submission Route
+            composable("submission/{bountyId}") { backStackEntry ->
+                val bountyId = backStackEntry.arguments?.getString("bountyId") ?: ""
+                SubmissionScreen(
+                    bountyId = bountyId,
+                    onDone = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             // Event Detail Route
             composable("event_detail/{eventId}") { backStackEntry ->
                 val eventId = backStackEntry.arguments?.getString("eventId")?.toIntOrNull() ?: 0
@@ -350,16 +360,10 @@ fun MyBottomNavigationBar(
     currentDestination: NavDestination?,
     items: List<BottomNavItem>
 ) {
-    Surface(
-        color = SurfaceDarkElevated,
-        shadowElevation = 12.dp,
-        tonalElevation = 0.dp
+    NavigationBar(
+        containerColor = SurfaceDarkElevated,
+        tonalElevation = 12.dp
     ) {
-        NavigationBar(
-            containerColor = Color.Transparent,
-            tonalElevation = 0.dp,
-            modifier = Modifier.height(72.dp)
-        ) {
             items.forEach { item ->
                 val isSelected = currentDestination?.hierarchy?.any { it.route == item.view.name } == true
                 NavigationBarItem(
@@ -398,7 +402,7 @@ fun MyBottomNavigationBar(
                                             )
                                         }
                                     )
-                                    .padding(8.dp)
+                                    .padding(6.dp)
                             ) {
                                 Icon(
                                     icon,
@@ -418,7 +422,6 @@ fun MyBottomNavigationBar(
                 )
             }
         }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

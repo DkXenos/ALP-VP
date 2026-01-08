@@ -58,10 +58,15 @@ class ForumPageViewModel(
     private val currentUserId: Int
         get() = try {
             val userId = TokenManager.getUserId()
-            if (userId > 0) userId else 1 // Use 1 as fallback if invalid ID
+            Log.d("ForumPageViewModel", "Getting user ID: $userId")
+            if (userId <= 0) {
+                Log.e("ForumPageViewModel", "Invalid user ID: $userId")
+                throw IllegalStateException("User not logged in or invalid user ID")
+            }
+            userId
         } catch (e: Exception) {
             Log.e("ForumPageViewModel", "Error getting user ID", e)
-            1 // Fallback user ID
+            throw IllegalStateException("Unable to get user ID: ${e.message}")
         }
 
     init {
@@ -242,17 +247,30 @@ class ForumPageViewModel(
     fun registerToEvent(eventId: Int) {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorState.value = null
             try {
-                Log.d("ForumPageViewModel", "Registering to event: $eventId")
-                container.eventRepository.registerToEvent(eventId, currentUserId)
+                Log.d("ForumPageViewModel", "Attempting to register to event: $eventId")
+
+                // Validate user ID first
+                val userId = currentUserId
+                Log.d("ForumPageViewModel", "User ID validated: $userId")
+
+                // Call repository to register
+                container.eventRepository.registerToEvent(eventId, userId)
+
                 // Add to registered events set
                 _registeredEvents.value = _registeredEvents.value + eventId
                 Log.d("ForumPageViewModel", "Successfully registered to event: $eventId")
+
                 // Refresh data to get updated registration count
                 loadData()
+            } catch (e: IllegalStateException) {
+                Log.e("ForumPageViewModel", "User not logged in", e)
+                _errorState.value = "Please log in to register for events"
             } catch (e: Exception) {
                 Log.e("ForumPageViewModel", "Error registering to event", e)
-                _errorState.value = "Failed to register: ${e.message}"
+                val errorMsg = e.message ?: "Unknown error"
+                _errorState.value = "Failed to register: $errorMsg"
             } finally {
                 _isLoading.value = false
             }

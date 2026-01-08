@@ -53,12 +53,22 @@ class EventDetailViewModel(
             _error.value = null
             try {
                 val userId = TokenManager.getUserId()
+
+                // Validate user ID
+                if (userId <= 0) {
+                    throw IllegalStateException("User not logged in. Please log in to register for events.")
+                }
+
                 Log.d("EventDetailViewModel", "Registering to event: $eventId, userId: $userId")
                 eventRepository.registerToEvent(eventId, userId)
                 Log.d("EventDetailViewModel", "Event registration successful")
                 _registerSuccess.value = true
                 // Reload event to get updated registration count
                 loadEventDetail(eventId)
+            } catch (e: IllegalStateException) {
+                val errorMsg = e.message ?: "User not logged in"
+                Log.e("EventDetailViewModel", errorMsg, e)
+                _error.value = errorMsg
             } catch (e: Exception) {
                 val errorMsg = "Error registering to event: ${e.message}"
                 Log.e("EventDetailViewModel", errorMsg, e)

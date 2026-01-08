@@ -64,6 +64,6 @@ data class UpdateEventRequest(
 )
 
 data class EventRegistrationRequest(
-    @SerializedName("eventId") val eventId: Int,
-    @SerializedName("userId") val userId: Int
+    @SerializedName("event_id") val eventId: Int,
+    @SerializedName("user_id") val userId: Int
 )

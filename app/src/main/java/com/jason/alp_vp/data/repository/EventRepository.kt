@@ -100,13 +100,22 @@ class EventRepository(private val service: EventService) {
     }
 
     suspend fun registerToEvent(eventId: Int, userId: Int) {
+        Log.d("EventRepository", "registerToEvent called with eventId=$eventId, userId=$userId")
+        Log.d("EventRepository", "eventId type: ${eventId::class.simpleName}, userId type: ${userId::class.simpleName}")
+
         val req = EventRegistrationRequest(eventId = eventId, userId = userId)
+        Log.d("EventRepository", "Request object created: eventId=${req.eventId}, userId=${req.userId}")
+
         val response = service.registerToEvent(req)
+        Log.d("EventRepository", "Response code: ${response.code()}")
+
         if (!response.isSuccessful) {
             val err = response.errorBody()?.string()
             val msg = err ?: "no body"
+            Log.e("EventRepository", "Registration failed: $msg")
             throw Exception("Failed to register to event: ${response.code()} - $msg")
         }
+        Log.d("EventRepository", "Successfully registered to event")
         // Response contains updated event data wrapped in { "data": {...} }
     }
 
@@ -121,16 +130,40 @@ class EventRepository(private val service: EventService) {
 
 
     private fun dtoToUi(item: EventResponseItem): Event {
+        val eventDate = try {
+            Instant.parse(item.event_date)
+        } catch (e: Exception) {
+            Log.e("EventRepository", "Failed to parse event_date: ${item.event_date} for event ${item.id}", e)
+            // Try to parse as different formats
+            try {
+                // Try ISO format with timezone: 2026-01-15T10:00:00Z
+                Instant.parse(item.event_date + "Z")
+            } catch (e2: Exception) {
+                Log.e("EventRepository", "Failed to parse with Z suffix, using far future date", e2)
+                // Use a far future date instead of now() to avoid showing "ended"
+                Instant.parse("2099-12-31T23:59:59Z")
+            }
+        }
+
+        val createdAt = try {
+            Instant.parse(item.created_at)
+        } catch (e: Exception) {
+            Log.w("EventRepository", "Failed to parse created_at: ${item.created_at}, using now()", e)
+            Instant.now()
+        }
+
+        Log.d("EventRepository", "Parsed event ${item.id}: date=${eventDate}, now=${Instant.now()}, future=${eventDate.isAfter(Instant.now())}")
+
         return Event(
             id = item.id,
             title = item.title,
             description = item.description,
-            eventDate = try { Instant.parse(item.event_date) } catch (_: Exception) { Instant.now() },
+            eventDate = eventDate,
             companyId = item.company_id,
             companyName = item.company_name,  // Flattened from nested company.name
             registeredQuota = item.registered_quota,
             currentRegistrations = item.current_registrations,
-            createdAt = try { Instant.parse(item.created_at) } catch (_: Exception) { Instant.now() }
+            createdAt = createdAt
         )
     }
 }

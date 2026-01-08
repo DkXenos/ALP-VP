@@ -23,7 +23,8 @@ import com.jason.alp_vp.ui.viewmodel.ProfileViewModel
 @Composable
 fun ActiveBountiesScreen(
     profileViewModel: ProfileViewModel = viewModel(),
-    onNavigateToBountyDetail: (String) -> Unit = {}
+    onNavigateToBountyDetail: (String) -> Unit = {},
+    onNavigateToSubmission: (String) -> Unit = {}
 ) {
     val profileData by profileViewModel.profileData.collectAsState()
     val isLoading by profileViewModel.isLoading.collectAsState()
@@ -32,10 +33,6 @@ fun ActiveBountiesScreen(
     // Tab state: 0 = Bounties, 1 = Events
     var selectedTab by remember { mutableStateOf(0) }
 
-    // Load profile data when screen loads
-    LaunchedEffect(Unit) {
-        profileViewModel.loadProfile()
-    }
 
     Surface(color = BackgroundDark, modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -195,7 +192,8 @@ fun ActiveBountiesScreen(
                             // Show active bounties using BountyItemCard from ProfileScreen
                             items(bounties) { bounty ->
                                 com.jason.alp_vp.ui.screens.BountyItemCard(
-                                    bounty = bounty
+                                    bounty = bounty,
+                                    onClick = { onNavigateToSubmission(bounty.id) }
                                 )
                             }
                         }
@@ -327,6 +325,31 @@ fun ActiveBountiesScreen(
                                 )
                             }
                         }
+                    } ?: run {
+                        // Handle case where events is null
+                        item {
+                            GlowingCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(50.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = "📅", fontSize = 72.sp)
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Text(
+                                        text = "Loading Events...",
+                                        color = TextPrimary,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -340,7 +363,7 @@ fun ActiveBountiesScreen(
 }
 
 @Composable
-private fun TabButton(
+fun TabButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,

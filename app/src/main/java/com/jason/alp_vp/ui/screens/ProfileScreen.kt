@@ -1,6 +1,7 @@
 package com.jason.alp_vp.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -486,7 +487,9 @@ private fun ProfileHeader(
 
 @Composable
 private fun StatsCard(stats: ProfileStats) {
-    val levelInfo = com.jason.alp_vp.utils.XpLevelCalculator.calculateLevel(stats.totalXpEarned)
+    // Add null safety for stats
+    val totalXp = stats.totalXpEarned ?: 0
+    val levelInfo = com.jason.alp_vp.utils.XpLevelCalculator.calculateLevel(totalXp)
 
     Card(
         modifier = Modifier
@@ -708,11 +711,12 @@ private fun SectionHeader(title: String, count: Int) {
 }
 
 @Composable
-fun BountyItemCard(bounty: ProfileBountyItem) {
+fun BountyItemCard(bounty: ProfileBountyItem, onClick: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = CardBackground),
         shape = RoundedCornerShape(12.dp)
     ) {

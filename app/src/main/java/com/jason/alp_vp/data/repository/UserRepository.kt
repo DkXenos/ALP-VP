@@ -27,14 +27,27 @@ class UserRepository(private val service: UserService) {
     }
 
     suspend fun login(email: String, password: String): Pair<String, UiUser> {
+        android.util.Log.d("UserRepository", "Attempting login for email: $email")
         val req = UserLoginRequest(email = email, password = password)
+        android.util.Log.d("UserRepository", "Login request created: email=$email")
+
         val response = service.login(req)
+        android.util.Log.d("UserRepository", "Login response code: ${response.code()}")
+
         if (!response.isSuccessful) {
             val err = response.errorBody()?.string()
             val msg = err ?: "no body"
-            throw Exception("Failed to login user: ${response.code()} - $msg")
+            android.util.Log.e("UserRepository", "Login failed: code=${response.code()}, error=$msg")
+            throw Exception("Login failed: ${response.code()} - $msg")
         }
-        val body = response.body()!!
+
+        val body = response.body()
+        if (body == null) {
+            android.util.Log.e("UserRepository", "Login response body is null")
+            throw Exception("Empty response from server")
+        }
+
+        android.util.Log.d("UserRepository", "Login successful: token=${body.token.take(10)}..., userId=${body.user.id}")
         return Pair(body.token, mapToUi(body.user))
     }
 

@@ -61,7 +61,7 @@ fun ForumPage(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Events Tab
-                TabButton(
+                ForumTabButton(
                     text = "Events (${events.size})",
                     isSelected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
@@ -69,7 +69,7 @@ fun ForumPage(
                 )
 
                 // Posts Tab
-                TabButton(
+                ForumTabButton(
                     text = "Posts (${postUis.size})",
                     isSelected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
@@ -466,7 +466,7 @@ private fun PostCardImproved(
 }
 
 @Composable
-private fun TabButton(
+private fun ForumTabButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
