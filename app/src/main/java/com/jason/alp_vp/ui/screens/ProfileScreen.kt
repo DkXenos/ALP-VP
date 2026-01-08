@@ -799,7 +799,7 @@ fun BountyItemCard(bounty: ProfileBountyItem) {
 }
 
 @Composable
-private fun EventItemCard(event: EventItem) {
+fun EventItemCard(event: EventItem) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
