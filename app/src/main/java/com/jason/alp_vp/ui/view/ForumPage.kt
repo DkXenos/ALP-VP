@@ -27,12 +27,14 @@ fun ForumPage(
     viewModel: ForumPageViewModel = viewModel(),
     onNavigateToEventPage: () -> Unit = {},
     onNavigateToPostPage: () -> Unit = {},
-    onNavigateToPostDetail: (Int) -> Unit = {}
+    onNavigateToPostDetail: (Int) -> Unit = {},
+    onNavigateToEventDetail: (Int) -> Unit = {}
 ) {
     val events by viewModel.events.collectAsState()
     val postUis by viewModel.postUis.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorState by viewModel.errorState.collectAsState()
+    val registeredEvents by viewModel.registeredEvents.collectAsState()
 
     // Log state for debugging
     LaunchedEffect(postUis, events) {
@@ -130,7 +132,9 @@ fun ForumPage(
                     EventCard(
                         event = event,
                         modifier = Modifier.padding(horizontal = 20.dp),
-                        onRegister = { viewModel.registerToEvent(it) }
+                        isRegistered = registeredEvents.contains(event.id),
+                        onRegister = { viewModel.registerToEvent(it) },
+                        onClick = { onNavigateToEventDetail(event.id) }
                     )
                 }
             }
@@ -185,8 +189,6 @@ fun ForumPage(
                         upvoteCount = postUi.upvoteCount,
                         downvoteCount = postUi.downvoteCount,
                         commentCount = postUi.post.comments.size,
-                        onUpvote = { viewModel.upvote(postUi.post.id) },
-                        onDownvote = { viewModel.downvote(postUi.post.id) },
                         onClick = { onNavigateToPostDetail(postUi.post.id) },
                         modifier = Modifier.padding(horizontal = 20.dp)
                     )
@@ -278,8 +280,6 @@ private fun PostCardImproved(
     upvoteCount: Int,
     downvoteCount: Int,
     commentCount: Int,
-    onUpvote: () -> Unit = {},
-    onDownvote: () -> Unit = {},
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -361,13 +361,13 @@ private fun PostCardImproved(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Actions: Upvote, Downvote, Comments
+            // Actions: Upvote, Downvote, Comments (display only - voting not supported)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Upvote
+                // Upvote (display only)
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = StatusSuccess.copy(alpha = 0.1f),
@@ -377,12 +377,8 @@ private fun PostCardImproved(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
-                            onClick = onUpvote,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Text("▲", color = StatusSuccess, fontSize = 16.sp)
-                        }
+                        Text("▲", color = StatusSuccess.copy(alpha = 0.5f), fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = upvoteCount.toString(),
                             color = StatusSuccess,
@@ -392,7 +388,7 @@ private fun PostCardImproved(
                     }
                 }
 
-                // Downvote
+                // Downvote (display only)
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = StatusError.copy(alpha = 0.1f),
@@ -402,12 +398,8 @@ private fun PostCardImproved(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
-                            onClick = onDownvote,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Text("▼", color = StatusError, fontSize = 16.sp)
-                        }
+                        Text("▼", color = StatusError.copy(alpha = 0.5f), fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = downvoteCount.toString(),
                             color = StatusError,

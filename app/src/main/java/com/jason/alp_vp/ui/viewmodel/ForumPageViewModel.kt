@@ -51,6 +51,10 @@ class ForumPageViewModel(
     private val _errorState = MutableStateFlow<String?>(null)
     val errorState: StateFlow<String?> = _errorState
 
+    // Track registered events
+    private val _registeredEvents = MutableStateFlow<Set<Int>>(emptySet())
+    val registeredEvents: StateFlow<Set<Int>> = _registeredEvents
+
     private val currentUserId: Int
         get() = try {
             val userId = TokenManager.getUserId()
@@ -149,48 +153,86 @@ class ForumPageViewModel(
     }
 
     fun upvote(postId: Int) {
+        // Post voting not supported - disabled
+        Log.d("ForumPageVM", "Post voting not supported by backend")
+    }
+
+    fun downvote(postId: Int) {
+        // Post voting not supported - disabled
+        Log.d("ForumPageVM", "Post voting not supported by backend")
+    }
+
+    // Comment voting functions
+    fun upvoteReply(commentId: Int) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Find post and add upvote to first comment
-                val post = _posts.value.find { it.id == postId }
-                post?.comments?.firstOrNull()?.let { comment ->
-                    val success = container.voteRepository.addUpvote(comment.id, currentUserId)
-                    if (success) {
-                        loadData() // Refresh to get updated vote counts
-                    } else {
-                        _errorState.value = "Failed to add upvote"
+                Log.d("ForumPageVM", "Upvoting comment: $commentId")
+                val success = container.voteRepository.addUpvote(commentId, currentUserId)
+                if (success) {
+                    Log.d("ForumPageVM", "Comment upvoted successfully")
+                    // Reload the selected post to refresh comment votes
+                    _selectedPost.value?.let { post ->
+                        selectPost(post.id)
                     }
-                } ?: run {
-                    _errorState.value = "Post or comment not found"
+                    loadData()
+                } else {
+                    _errorState.value = "Failed to upvote comment"
                 }
             } catch (e: Exception) {
-                Log.e("ForumPageVM", "Error upvoting post", e)
-                _errorState.value = "Error adding upvote: ${e.message}"
+                Log.e("ForumPageVM", "Error upvoting comment", e)
+                _errorState.value = "Error upvoting: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun downvote(postId: Int) {
+    fun downvoteReply(commentId: Int) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val post = _posts.value.find { it.id == postId }
-                post?.comments?.firstOrNull()?.let { comment ->
-                    val success = container.voteRepository.addDownvote(comment.id, currentUserId)
-                    if (success) {
-                        loadData() // Refresh to get updated vote counts
-                    } else {
-                        _errorState.value = "Failed to add downvote"
+                Log.d("ForumPageVM", "Downvoting comment: $commentId")
+                val success = container.voteRepository.addDownvote(commentId, currentUserId)
+                if (success) {
+                    Log.d("ForumPageVM", "Comment downvoted successfully")
+                    // Reload the selected post to refresh comment votes
+                    _selectedPost.value?.let { post ->
+                        selectPost(post.id)
                     }
-                } ?: run {
-                    _errorState.value = "Post or comment not found"
+                    loadData()
+                } else {
+                    _errorState.value = "Failed to downvote comment"
                 }
             } catch (e: Exception) {
-                Log.e("ForumPageVM", "Error downvoting post", e)
-                _errorState.value = "Error adding downvote: ${e.message}"
+                Log.e("ForumPageVM", "Error downvoting comment", e)
+                _errorState.value = "Error downvoting: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // Add new comment to post
+    fun sendReply(content: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val postId = _selectedPost.value?.id ?: return@launch
+                Log.d("ForumPageVM", "Adding comment to post: $postId")
+
+                val success = container.commentRepository.addComment(postId, content)
+                if (success) {
+                    Log.d("ForumPageVM", "Comment added successfully")
+                    // Reload post to show new comment
+                    selectPost(postId)
+                    loadData()
+                } else {
+                    _errorState.value = "Failed to add comment"
+                }
+            } catch (e: Exception) {
+                Log.e("ForumPageVM", "Error adding comment", e)
+                _errorState.value = "Error adding comment: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
@@ -199,11 +241,20 @@ class ForumPageViewModel(
 
     fun registerToEvent(eventId: Int) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
-                // TODO: Implement event registration through backend
+                Log.d("ForumPageViewModel", "Registering to event: $eventId")
+                container.eventRepository.registerToEvent(eventId, currentUserId)
+                // Add to registered events set
+                _registeredEvents.value = _registeredEvents.value + eventId
+                Log.d("ForumPageViewModel", "Successfully registered to event: $eventId")
+                // Refresh data to get updated registration count
                 loadData()
             } catch (e: Exception) {
-                // Handle error
+                Log.e("ForumPageViewModel", "Error registering to event", e)
+                _errorState.value = "Failed to register: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -229,12 +280,35 @@ class ForumPageViewModel(
     // Fungsi untuk Post Detail
     fun selectPost(postId: Int) {
         viewModelScope.launch {
-            val post = _posts.value.find { it.id == postId }
-            _selectedPost.value = post
-            // Load replies dari comments yang ada di post
-            _selectedPostReplies.value = post?.comments ?: emptyList()
-            // Compute and set time-ago string for the UI
-            _selectedPostTimeAgo.value = post?.let { computeTimeAgo(it.createdAt) } ?: ""
+            _isLoading.value = true
+            _errorState.value = null
+            try {
+                Log.d("ForumPageVM", "Selecting post: $postId")
+
+                // First try to find in cached posts
+                var post = _posts.value.find { it.id == postId }
+
+                // If not found, load from backend
+                if (post == null) {
+                    Log.d("ForumPageVM", "Post not in cache, loading from backend...")
+                    post = container.postRepository.getPostById(postId)
+                    Log.d("ForumPageVM", "Post loaded from backend: $post")
+                }
+
+                _selectedPost.value = post
+                // Load replies dari comments yang ada di post
+                _selectedPostReplies.value = post?.comments ?: emptyList()
+                // Compute and set time-ago string for the UI
+                _selectedPostTimeAgo.value = post?.let { computeTimeAgo(it.createdAt) } ?: ""
+
+                Log.d("ForumPageVM", "Post selected successfully with ${post?.comments?.size ?: 0} comments")
+            } catch (e: Exception) {
+                Log.e("ForumPageVM", "Error selecting post", e)
+                _errorState.value = "Failed to load post: ${e.message}"
+                _selectedPost.value = null
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
@@ -298,60 +372,6 @@ class ForumPageViewModel(
                 _errorState.value = "Error downvoting post: ${e.message}"
             } finally {
                 _isLoading.value = false
-            }
-        }
-    }
-
-    fun upvoteReply(commentId: Int) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val success = container.voteRepository.addUpvote(commentId, currentUserId)
-                if (success) {
-                    _selectedPost.value?.let { selectPost(it.id) }
-                    loadData()
-                } else {
-                    _errorState.value = "Failed to upvote reply"
-                }
-            } catch (e: Exception) {
-                Log.e("ForumPageVM", "Error upvoting reply", e)
-                _errorState.value = "Error upvoting reply: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun downvoteReply(commentId: Int) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val success = container.voteRepository.addDownvote(commentId, currentUserId)
-                if (success) {
-                    _selectedPost.value?.let { selectPost(it.id) }
-                    loadData()
-                } else {
-                    _errorState.value = "Failed to downvote reply"
-                }
-            } catch (e: Exception) {
-                Log.e("ForumPageVM", "Error downvoting reply", e)
-                _errorState.value = "Error downvoting reply: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun sendReply(content: String) {
-        viewModelScope.launch {
-            try {
-                _selectedPost.value?.let { post ->
-                    container.commentRepository.createComment(post.id, currentUserId, content)
-                    loadData()
-                    selectPost(post.id)
-                }
-            } catch (e: Exception) {
-                // Handle error
             }
         }
     }

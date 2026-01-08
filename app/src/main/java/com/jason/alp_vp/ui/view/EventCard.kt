@@ -25,7 +25,9 @@ import java.time.Instant
 fun EventCard(
     event: Event,
     modifier: Modifier = Modifier,
-    onRegister: (Int) -> Unit = {}
+    isRegistered: Boolean = false,
+    onRegister: (Int) -> Unit = {},
+    onClick: () -> Unit = {}
 ) {
     val timeUntil = remember(event.eventDate) {
         val duration = Duration.between(Instant.now(), event.eventDate)
@@ -71,7 +73,8 @@ fun EventCard(
             .scale(scale),
         shape = RoundedCornerShape(16.dp),
         color = Color.Transparent,
-        shadowElevation = 12.dp
+        shadowElevation = 12.dp,
+        onClick = onClick
     ) {
         Box(
             modifier = Modifier
@@ -240,8 +243,12 @@ fun EventCard(
 
                 // Register button with gradient
                 Button(
-                    onClick = { onRegister(event.id) },
-                    enabled = !isFull,
+                    onClick = {
+                        if (!isRegistered) {
+                            onRegister(event.id)
+                        }
+                    },
+                    enabled = !isFull && !isRegistered,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -251,18 +258,20 @@ fun EventCard(
                     ),
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(0.dp),
-                    border = if (!isFull) BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f)) else null
+                    border = if (!isFull && !isRegistered) BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f)) else null
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
-                                if (!isFull) {
-                                    Brush.horizontalGradient(
+                                when {
+                                    isRegistered -> Brush.horizontalGradient(
+                                        colors = listOf(StatusSuccess.copy(alpha = 0.6f), StatusSuccess.copy(alpha = 0.4f))
+                                    )
+                                    !isFull -> Brush.horizontalGradient(
                                         colors = listOf(GradientStart, GradientMiddle, GradientEnd)
                                     )
-                                } else {
-                                    Brush.horizontalGradient(
+                                    else -> Brush.horizontalGradient(
                                         colors = listOf(TextTertiary, TextTertiary)
                                     )
                                 }
@@ -270,14 +279,22 @@ fun EventCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (isRegistered) {
+                                Text(text = "✓", fontSize = 18.sp, color = TextPrimary)
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
                             Text(
-                                text = if (isFull) "Event Full" else "Register Now",
+                                text = when {
+                                    isRegistered -> "Registered"
+                                    isFull -> "Event Full"
+                                    else -> "Register Now"
+                                },
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp,
                                 color = TextPrimary
                             )
-                            if (!isFull) {
+                            if (!isFull && !isRegistered) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(text = "→", fontSize = 18.sp, color = TextPrimary)
                             }

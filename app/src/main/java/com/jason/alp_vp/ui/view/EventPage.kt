@@ -24,9 +24,11 @@ import com.jason.alp_vp.ui.viewmodel.ForumPageViewModel
 @Composable
 fun EventPage(
     viewModel: ForumPageViewModel = viewModel(),
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onNavigateToEventDetail: (Int) -> Unit = {}
 ) {
     val events by viewModel.events.collectAsState()
+    val registeredEvents by viewModel.registeredEvents.collectAsState()
 
     Surface(color = BackgroundDark, modifier = Modifier.fillMaxSize()) {
         Column {
@@ -77,7 +79,9 @@ fun EventPage(
                 items(events) { event ->
                     EventCard(
                         event = event,
-                        onRegister = { viewModel.registerToEvent(it) }
+                        isRegistered = registeredEvents.contains(event.id),
+                        onRegister = { viewModel.registerToEvent(it) },
+                        onClick = { onNavigateToEventDetail(event.id) }
                     )
                 }
                 item {

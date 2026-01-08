@@ -93,6 +93,7 @@ fun AppRoute() {
                 val title = when (currentBaseRoute) {
                     "bounty_detail" -> "Bounty Details"
                     "profile_edit" -> "Edit Profile"
+                    "event_detail" -> "Event Details"
                     else -> {
                         val displayView = AppView.entries.find { it.name == currentBaseRoute } ?: AppView.Forum
                         displayView.title
@@ -156,6 +157,9 @@ fun AppRoute() {
                     onNavigateToPostPage = { /* Already on posts */ },
                     onNavigateToPostDetail = { postId ->
                         navController.navigate("${AppView.PostDetail.name}/$postId")
+                    },
+                    onNavigateToEventDetail = { eventId ->
+                        navController.navigate("event_detail/$eventId")
                     }
                 )
             }
@@ -177,8 +181,6 @@ fun AppRoute() {
                         post = selectedPost!!,
                         replies = replies,
                         timeAgo = timeAgo,
-                        onUpvotePost = { vm.upvotePost(it) },
-                        onDownvotePost = { vm.downvotePost(it) },
                         onUpvoteReply = { vm.upvoteReply(it) },
                         onDownvoteReply = { vm.downvoteReply(it) },
                         onSendReply = { vm.sendReply(it) }
@@ -192,7 +194,12 @@ fun AppRoute() {
             }
 
             composable(AppView.Events.name) {
-                EventPage(onBack = { navController.popBackStack() })
+                EventPage(
+                    onBack = { navController.popBackStack() },
+                    onNavigateToEventDetail = { eventId ->
+                        navController.navigate("event_detail/$eventId")
+                    }
+                )
             }
 
             composable(AppView.Profile.name) {
@@ -257,6 +264,21 @@ fun AppRoute() {
             composable("profile_edit") {
                 com.jason.alp_vp.ui.screens.ProfileEditScreen(
                     onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            // Event Detail Route
+            composable("event_detail/{eventId}") { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getString("eventId")?.toIntOrNull() ?: 0
+                val forumViewModel: ForumPageViewModel = viewModel()
+
+                com.jason.alp_vp.ui.screens.EventDetailScreen(
+                    eventId = eventId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onEventRegistered = {
+                        // Refresh events after registration
+                        forumViewModel.refreshData()
+                    }
                 )
             }
         }

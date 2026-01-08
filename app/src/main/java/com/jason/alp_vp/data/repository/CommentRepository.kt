@@ -99,6 +99,18 @@ class CommentRepository(private val service: CommentService) {
         return items.map { dtoToUi(it) }
     }
 
+    // Simple wrapper for adding comment with current user
+    suspend fun addComment(postId: Int, content: String): Boolean {
+        return try {
+            val userId = com.jason.alp_vp.utils.TokenManager.getUserId()
+            createComment(postId, userId, content)
+            true
+        } catch (e: Exception) {
+            Log.e("CommentRepository", "Error adding comment", e)
+            false
+        }
+    }
+
     // Flatten List<CommentResponse> (each is ArrayList<CommentResponseItem>) -> List<CommentResponseItem>
     private fun flattenCommentResponses(listOfResponses: List<CommentResponse>): List<CommentResponseItem> {
         val out = mutableListOf<CommentResponseItem>()

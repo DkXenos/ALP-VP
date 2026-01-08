@@ -27,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,8 +40,6 @@ fun PostDetail(
     post: Post,
     replies: List<Comment> = emptyList(),
     timeAgo: String = "",
-    onUpvotePost: (Int) -> Unit = {},
-    onDownvotePost: (Int) -> Unit = {},
     onUpvoteReply: (Int) -> Unit = {},
     onDownvoteReply: (Int) -> Unit = {},
     onSendReply: (String) -> Unit = {}
@@ -52,18 +49,6 @@ fun PostDetail(
     // Get author info from post
     val authorName = post.authorName.ifEmpty { "User${post.userId}" }
     val authorInitial = authorName.firstOrNull()?.uppercaseChar()?.toString() ?: "U"
-
-    // Calculate votes from comments
-    var upvotes = 0
-    var downvotes = 0
-    post.comments.forEach { comment ->
-        comment.commentVotes.forEach { vote ->
-            when (vote.voteType) {
-                "upvote" -> upvotes++
-                "downvote" -> downvotes++
-            }
-        }
-    }
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -111,47 +96,8 @@ fun PostDetail(
                                     text = post.content,
                                     color = Color.White,
                                     fontSize = 14.sp,
-                                    maxLines = 6,
-                                    overflow = TextOverflow.Ellipsis
+                                    lineHeight = 20.sp
                                 )
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // Upvote button
-                                    Button (
-                                        onClick = { onUpvotePost(post.id) },
-                                        colors = ButtonDefaults.buttonColors(Color(0xFF17291E)),
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 1.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.KeyboardArrowUp,
-                                            contentDescription = "Upvote",
-                                            tint = Color(0xFF57D06A),
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(text = upvotes.toString(), color = Color(0xFF57D06A), fontSize = 13.sp)
-                                    }
-
-                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                    // Downvote button
-                                    Button (
-                                        onClick = { onDownvotePost(post.id) },
-                                        colors = ButtonDefaults.buttonColors(Color(0xFF291717)),
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 1.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.KeyboardArrowDown,
-                                            contentDescription = "Downvote",
-                                            tint = Color(0xFFFF5C5C),
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(text = downvotes.toString(), color = Color(0xFFFF5C5C), fontSize = 13.sp)
-                                    }
-                                }
                             }
                         }
                     }
@@ -277,3 +223,4 @@ fun PostDetailPreview() {
 
     PostDetail(post = post, replies = listOf(r1, r2), timeAgo = previewTimeAgo)
 }
+

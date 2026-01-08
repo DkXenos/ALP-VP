@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 class AppContainer {
     companion object {
         // Use localhost for reliable connection (run: adb reverse tcp:3000 tcp:3000)
-        private const val BASE_URL = "http://10.0.169.13:3000/api/"
+        private const val BASE_URL = "http://192.168.20.12:3000/api/"
     }
 
     // OkHttp client with JWT token interceptor and logging

@@ -1,5 +1,6 @@
 package com.jason.alp_vp.data.service
 
+import com.google.gson.annotations.SerializedName
 import com.jason.alp_vp.data.dto.event.EventResponseItem
 import retrofit2.Response
 import retrofit2.http.*
@@ -63,6 +64,6 @@ data class UpdateEventRequest(
 )
 
 data class EventRegistrationRequest(
-    val eventId: Int,
-    val userId: Int
+    @SerializedName("eventId") val eventId: Int,
+    @SerializedName("userId") val userId: Int
 )
