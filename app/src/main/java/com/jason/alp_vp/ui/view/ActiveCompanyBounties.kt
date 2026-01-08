@@ -75,11 +75,11 @@ fun ActiveCompanyBounties(
             modifier = Modifier.weight(1f)
         ) {
             items(bounties) { bounty ->
-                BountyCard(bounty, onView)
+                BountyCompanyCard(bounty, onView)
             }
         }
 
-        BottomNavigationBar()
+        BottomNavigationBar1()
     }
 }
 
@@ -145,5 +145,5 @@ fun PreviewActiveCompanyBounties() {
         )
     }
 
-    ActiveBountiesContent(bounties = sample, onView = {})
+    ActiveCompanyBounties(bounties = sample, onView = {})
 }

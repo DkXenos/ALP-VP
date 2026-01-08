@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -36,6 +35,9 @@ fun ForumPage(
     val errorState by viewModel.errorState.collectAsState()
     val registeredEvents by viewModel.registeredEvents.collectAsState()
 
+    // Tab state: 0 = Events, 1 = Posts
+    var selectedTab by remember { mutableStateOf(0) }
+
     // Log state for debugging
     LaunchedEffect(postUis, events) {
         Log.d("ForumPage", "Posts count: ${postUis.size}")
@@ -50,11 +52,37 @@ fun ForumPage(
             .fillMaxSize()
             .background(BackgroundDark)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            contentPadding = PaddingValues(vertical = 20.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Tab Selector
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Events Tab
+                TabButton(
+                    text = "Events (${events.size})",
+                    isSelected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Posts Tab
+                TabButton(
+                    text = "Posts (${postUis.size})",
+                    isSelected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Content based on selected tab
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                contentPadding = PaddingValues(vertical = 20.dp)
+            ) {
             // Error message if any
             errorState?.let { error ->
                 item {
@@ -91,107 +119,106 @@ fun ForumPage(
                 }
             }
 
-            // Event Posts Section
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Event Posts",
-                        color = TextPrimary,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    )
-                    TextButton(onClick = onNavigateToEventPage) {
+            // Show content based on selected tab
+            if (selectedTab == 0) {
+                // Events Tab Content
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = "View All (${events.size})",
-                            color = AccentCyan,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold
+                            text = "Upcoming Events",
+                            color = TextPrimary,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
+                        )
+                        TextButton(onClick = onNavigateToEventPage) {
+                            Text(
+                                text = "View All",
+                                color = AccentCyan,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+
+                // Show events or empty state
+                if (events.isEmpty() && !isLoading) {
+                    item {
+                        EmptyStateCard(
+                            icon = "📅",
+                            title = "No Events Yet",
+                            message = "Check back later for upcoming events"
+                        )
+                    }
+                } else {
+                    items(events) { event ->
+                        EventCard(
+                            event = event,
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                            isRegistered = registeredEvents.contains(event.id),
+                            onRegister = { viewModel.registerToEvent(it) },
+                            onClick = { onNavigateToEventDetail(event.id) }
                         )
                     }
                 }
-            }
-
-            // Show events or empty state
-            if (events.isEmpty() && !isLoading) {
-                item {
-                    EmptyStateCard(
-                        icon = "📅",
-                        title = "No Events Yet",
-                        message = "Check back later for upcoming events"
-                    )
-                }
             } else {
-                items(events.take(2)) { event ->
-                    EventCard(
-                        event = event,
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        isRegistered = registeredEvents.contains(event.id),
-                        onRegister = { viewModel.registerToEvent(it) },
-                        onClick = { onNavigateToEventDetail(event.id) }
-                    )
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // Community Feed Section Header
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Community Feed",
-                        color = TextPrimary,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    )
-                    TextButton(onClick = onNavigateToPostPage) {
+                // Posts Tab Content
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = "View All (${postUis.size})",
-                            color = AccentCyan,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold
+                            text = "Community Posts",
+                            color = TextPrimary,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
                         )
+                        TextButton(onClick = onNavigateToPostPage) {
+                            Text(
+                                text = "View All",
+                                color = AccentCyan,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
-            }
 
-            // Show posts or empty state
-            if (postUis.isEmpty() && !isLoading) {
-                item {
-                    EmptyStateCard(
-                        icon = "💬",
-                        title = "No Posts Yet",
-                        message = "Be the first to share something with the community!"
-                    )
-                }
-            } else {
-                items(postUis.take(3)) { postUi ->
-                    PostCardImproved(
-                        id = postUi.post.id,
-                        authorName = postUi.post.authorName,
-                        content = postUi.post.content,
-                        createdAt = postUi.post.createdAt,
-                        upvoteCount = postUi.upvoteCount,
-                        downvoteCount = postUi.downvoteCount,
-                        commentCount = postUi.post.comments.size,
-                        onClick = { onNavigateToPostDetail(postUi.post.id) },
-                        modifier = Modifier.padding(horizontal = 20.dp)
-                    )
+                // Show posts or empty state
+                if (postUis.isEmpty() && !isLoading) {
+                    item {
+                        EmptyStateCard(
+                            icon = "💬",
+                            title = "No Posts Yet",
+                            message = "Be the first to share something with the community!"
+                        )
+                    }
+                } else {
+                    items(postUis) { postUi ->
+                        PostCardImproved(
+                            id = postUi.post.id,
+                            authorName = postUi.post.authorName,
+                            content = postUi.post.content,
+                            createdAt = postUi.post.createdAt,
+                            upvoteCount = postUi.upvoteCount,
+                            downvoteCount = postUi.downvoteCount,
+                            commentCount = postUi.post.comments.size,
+                            onClick = { onNavigateToPostDetail(postUi.post.id) },
+                            modifier = Modifier.padding(horizontal = 20.dp)
+                        )
+                    }
                 }
             }
 
@@ -227,6 +254,7 @@ fun ForumPage(
                     }
                 }
             }
+        }
         }
     }
 }
@@ -371,7 +399,7 @@ private fun PostCardImproved(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = StatusSuccess.copy(alpha = 0.1f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.2f))
+                    border = BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.2f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -392,7 +420,7 @@ private fun PostCardImproved(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = StatusError.copy(alpha = 0.1f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(alpha = 0.2f))
+                    border = BorderStroke(1.dp, StatusError.copy(alpha = 0.2f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -413,7 +441,7 @@ private fun PostCardImproved(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = AccentCyan.copy(alpha = 0.1f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, AccentCyan.copy(alpha = 0.2f))
+                    border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.2f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -437,3 +465,31 @@ private fun PostCardImproved(
     }
 }
 
+@Composable
+private fun TabButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) AccentCyan.copy(alpha = 0.2f) else SurfaceDark,
+            contentColor = if (isSelected) AccentCyan else TextSecondary
+        ),
+        shape = RoundedCornerShape(12.dp),
+        border = if (isSelected) {
+            BorderStroke(2.dp, AccentCyan)
+        } else {
+            BorderStroke(1.dp, BorderGlow)
+        }
+    ) {
+        Text(
+            text = text,
+            fontSize = 15.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+        )
+    }
+}

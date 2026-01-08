@@ -221,7 +221,7 @@ fun HomePage(
 }
 
 @Composable
-private fun BountyCardItem(
+fun BountyCardItem(
     bounty: com.jason.alp_vp.ui.model.Bounty,
     isClaimed: Boolean = false,
     onClick: () -> Unit = {}

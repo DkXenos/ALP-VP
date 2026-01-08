@@ -9,8 +9,10 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -47,7 +49,10 @@ enum class AppView(
 ) {
     Login("Login"),
     Register("Register"),
-    Forum("Homepage", Icons.Filled.Home, Icons.Outlined.Home),
+    Home("Home", Icons.Filled.Home, Icons.Outlined.Home),  // Homepage with all bounties
+    Active("Active", Icons.Filled.Work, Icons.Outlined.Work),  // My active/claimed bounties
+    Bounties("Bounties", Icons.Filled.Home, Icons.Outlined.Home),  // Legacy - redirect to Home
+    Forum("Forums", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),  // Events/Posts tabs
     Posts("Posts", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
     PostDetail("PostDetail"),
     Events("Events"),
@@ -73,7 +78,7 @@ fun AppRoute() {
     }
 
     // Pages that should show the bottom bar
-    val rootPages = listOf(AppView.Forum.name, AppView.Posts.name, AppView.Profile.name)
+    val rootPages = listOf(AppView.Home.name, AppView.Active.name, AppView.Forum.name, AppView.Profile.name)
 
     // Auth pages (no top/bottom bar)
     val authPages = listOf(AppView.Login.name, AppView.Register.name)
@@ -105,8 +110,9 @@ fun AppRoute() {
         bottomBar = {
             if (currentRoute in rootPages) {
                 val items = listOf(
-                    BottomNavItem(AppView.Forum, "Home"),
-                    BottomNavItem(AppView.Posts, "Posts"),
+                    BottomNavItem(AppView.Home, "Home"),
+                    BottomNavItem(AppView.Active, "Active"),
+                    BottomNavItem(AppView.Forum, "Forums"),
                     BottomNavItem(AppView.Profile, "Profile")
                 )
                 MyBottomNavigationBar(navController, navBackStackEntry?.destination, items)
@@ -115,7 +121,7 @@ fun AppRoute() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = if (isLoggedIn) AppView.Forum.name else AppView.Login.name,
+            startDestination = if (isLoggedIn) AppView.Home.name else AppView.Login.name,
             modifier = Modifier.padding(innerPadding)
         ) {
             // Auth Routes
@@ -133,12 +139,13 @@ fun AppRoute() {
                 )
             }
 
-            composable(AppView.Forum.name) {
+            // Home Page (All bounties)
+            composable(AppView.Home.name) {
                 val bountyViewModel: com.jason.alp_vp.ui.viewmodel.BountyViewModel = viewModel()
 
                 // Refresh bounties when navigating to this screen
                 LaunchedEffect(currentRoute) {
-                    if (currentRoute == AppView.Forum.name) {
+                    if (currentRoute == AppView.Home.name) {
                         bountyViewModel.loadAllBounties()
                     }
                 }
@@ -151,6 +158,58 @@ fun AppRoute() {
                 )
             }
 
+            // Active Page (My active/claimed bounties ONLY)
+            composable(AppView.Active.name) {
+                val profileViewModel: com.jason.alp_vp.ui.viewmodel.ProfileViewModel = viewModel()
+
+                // Refresh profile when navigating to this screen
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute == AppView.Active.name) {
+                        profileViewModel.loadProfile()
+                    }
+                }
+
+                ActiveBountiesScreen(
+                    profileViewModel = profileViewModel,
+                    onNavigateToBountyDetail = { bountyId: String ->
+                        navController.navigate("bounty_detail/$bountyId")
+                    }
+                )
+            }
+
+            // Legacy Bounties route (redirect to Home)
+            composable(AppView.Bounties.name) {
+                val bountyViewModel: com.jason.alp_vp.ui.viewmodel.BountyViewModel = viewModel()
+
+                LaunchedEffect(currentRoute) {
+                    if (currentRoute == AppView.Bounties.name) {
+                        bountyViewModel.loadAllBounties()
+                    }
+                }
+
+                HomePage(
+                    bountyViewModel = bountyViewModel,
+                    onNavigateToBountyDetail = { bountyId: String ->
+                        navController.navigate("bounty_detail/$bountyId")
+                    }
+                )
+            }
+
+            // Forum Page (Events and Posts with tabs)
+            composable(AppView.Forum.name) {
+                ForumPage(
+                    onNavigateToEventPage = { navController.navigate(AppView.Events.name) },
+                    onNavigateToPostPage = { /* Already on forum */ },
+                    onNavigateToPostDetail = { postId ->
+                        navController.navigate("${AppView.PostDetail.name}/$postId")
+                    },
+                    onNavigateToEventDetail = { eventId ->
+                        navController.navigate("event_detail/$eventId")
+                    }
+                )
+            }
+
+            // Legacy Posts route (redirect to Forum)
             composable(AppView.Posts.name) {
                 ForumPage(
                     onNavigateToEventPage = { navController.navigate(AppView.Events.name) },

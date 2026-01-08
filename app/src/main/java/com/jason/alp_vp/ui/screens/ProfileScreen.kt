@@ -708,7 +708,7 @@ private fun SectionHeader(title: String, count: Int) {
 }
 
 @Composable
-private fun BountyItemCard(bounty: ProfileBountyItem) {
+fun BountyItemCard(bounty: ProfileBountyItem) {
     Card(
         modifier = Modifier
             .fillMaxWidth()

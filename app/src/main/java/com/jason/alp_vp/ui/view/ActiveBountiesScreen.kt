@@ -1,150 +1,191 @@
 package com.jason.alp_vp.ui.view
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jason.alp_vp.ui.model.Bounty
-import com.jason.alp_vp.ui.viewmodel.BountyViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jason.alp_vp.ui.theme.*
+import com.jason.alp_vp.ui.viewmodel.ProfileViewModel
 
-private val DarkBG = Color(0xFF0E0E0E)
-private val CardDark = Color(0xFF1A1A1A)
-private val PureWhite = Color(0xFFFFFFFF)
-private val SoftGray = Color(0xFF9E9E9E)
-private val PrimaryGreen = Color(0xFF00C155)
-private val BottomNavDark = Color(0xFF111111)
-
-@Suppress("unused")
 @Composable
 fun ActiveBountiesScreen(
-    viewModel: BountyViewModel,
-    onView: (Bounty) -> Unit
+    profileViewModel: ProfileViewModel = viewModel(),
+    onNavigateToBountyDetail: (String) -> Unit = {}
 ) {
-    val bounties by viewModel.bounties.collectAsState()
+    val profileData by profileViewModel.profileData.collectAsState()
+    val isLoading by profileViewModel.isLoading.collectAsState()
+    val error by profileViewModel.error.collectAsState()
 
-    ActiveBountiesContent(
-        bounties = bounties,
-        onView = onView
-    )
-}
+    // Load profile data when screen loads
+    LaunchedEffect(Unit) {
+        profileViewModel.loadProfile()
+    }
 
-@Composable
-fun ActiveBountiesContent(
-    bounties: List<Bounty>,
-    onView: (Bounty) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DarkBG)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Active Bounties",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = PureWhite
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = "${bounties.size} / 3 Active",
-            fontSize = 14.sp,
-            color = PrimaryGreen
-        )
-
-        Spacer(Modifier.height(20.dp))
-
+    Surface(color = BackgroundDark, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(bounties) { bounty ->
-                BountyCard(bounty, onView)
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Active Bounties Header
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "My Active Bounties",
+                            color = TextPrimary,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Bounties you're currently working on",
+                            color = TextSecondary,
+                            fontSize = 14.sp
+                        )
+                    }
+
+                    Surface(
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                        color = AccentCyan.copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, AccentCyan.copy(alpha = 0.3f))
+                    ) {
+                        Text(
+                            text = (profileData?.bounties?.size ?: 0).toString(),
+                            color = AccentCyan,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+
+            // Show loading, error, or bounties
+            if (isLoading) {
+                item {
+                    GlowingCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(60.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = AccentCyan,
+                                strokeWidth = 3.dp
+                            )
+                        }
+                    }
+                }
+            } else if (error != null) {
+                item {
+                    GlowingCard(
+                        glowColor = StatusError.copy(alpha = 0.3f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(30.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "⚠️ Failed to load bounties",
+                                color = StatusError,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = error ?: "Unknown error",
+                                color = TextSecondary,
+                                fontSize = 13.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            GradientButton(
+                                text = "Retry",
+                                onClick = { profileViewModel.loadProfile() }
+                            )
+                        }
+                    }
+                }
+            } else {
+                profileData?.bounties?.let { bounties ->
+                    if (bounties.isEmpty()) {
+                        // Empty state - no active bounties
+                        item {
+                            GlowingCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(50.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = "📋", fontSize = 72.sp)
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Text(
+                                        text = "No Active Bounties",
+                                        color = TextPrimary,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        text = "You haven't claimed any bounties yet.\nGo to Home to find available bounties!",
+                                        color = TextSecondary,
+                                        fontSize = 15.sp,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                        lineHeight = 22.sp
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // Show active bounties using BountyItemCard from ProfileScreen
+                        items(bounties) { bounty ->
+                            com.jason.alp_vp.ui.screens.BountyItemCard(
+                                bounty = bounty
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(100.dp))
             }
         }
-
-        BottomNavigationBar()
     }
 }
 
-@Composable
-fun BountyCard(bounty: Bounty, onView: (Bounty) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(CardDark, shape = MaterialTheme.shapes.medium)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = bounty.title,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = PureWhite
-        )
-
-        Spacer(Modifier.height(4.dp))
-
-        Text(text = bounty.company, fontSize = 14.sp, color = SoftGray)
-
-        Spacer(Modifier.height(6.dp))
-
-        Text(text = "Deadline: ${bounty.deadline}", fontSize = 12.sp, color = SoftGray)
-
-        Spacer(Modifier.height(12.dp))
-
-        Button(
-            onClick = { onView(bounty) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
-        ) {
-            Text("View", color = PureWhite)
-        }
-    }
-}
-
-@Composable
-fun BottomNavigationBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .background(BottomNavDark),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Text("Home", color = SoftGray)
-        Text("Active", color = PrimaryGreen)
-        Text("Forums", color = SoftGray)
-        Text("Profile", color = SoftGray)
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PreviewActiveBounties() {
-    val sample = remember {
-        listOf(
-            Bounty("1", "Build Website", "BlueTech", "31 Dec 2025", 300, 500000, "active"),
-            Bounty("2", "UI Redesign", "Aura Corp", "15 Jan 2026", 200, 350000, "active"),
-        )
-    }
-
-    ActiveBountiesContent(bounties = sample, onView = {})
-}
